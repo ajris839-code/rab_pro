@@ -42,11 +42,13 @@ module RABPro
     end
 
     # Check if string matches any pattern in array (supports * wildcard)
+    # Fixed: properly escape special regex characters before gsub
     def self.matches_any?(str, patterns)
       s = normalize(str)
       patterns.any? do |pat|
-        regex = Regexp.new('\A' + Regexp.escape(normalize(pat)).gsub('\*', '.*') + '\z')
-        s.match?(regex)
+        # Normalize pattern first, then convert * to regex wildcard
+        normalized_pattern = normalize(pat).gsub('*', '.*')
+        /\A#{normalized_pattern}\z/.match?(s)
       end
     end
 

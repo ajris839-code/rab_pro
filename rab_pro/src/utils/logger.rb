@@ -41,17 +41,25 @@ module RABPro
       end
 
       def log_file_path
-        @log_file_path ||= File.join(
-          ENV['APPDATA'] || Dir.home,
-          'RABPro', 'logs', "rab_pro_#{Date.today}.log"
-        )
+        @log_file_path ||= begin
+          base_dir = if ENV['APPDATA']  # Windows
+                       File.join(ENV['APPDATA'], 'RABPro', 'logs')
+                     else  # macOS/Linux
+                       File.join(Dir.home, '.rab_pro', 'logs')
+                     end
+          
+          # Ensure directory exists
+          FileUtils.mkdir_p(base_dir) unless Dir.exist?(base_dir)
+          File.join(base_dir, "rab_pro_#{Date.today}.log")
+        end
       end
 
       def write_to_file(line)
-        FileUtils.mkdir_p(File.dirname(log_file_path))
-        File.open(log_file_path, 'a') { |f| f.puts(line) }
-      rescue => e
-        puts "[RABPro][WARN] Could not write to log file: #{e.message}"
+        begin
+          File.open(log_file_path, 'a') { |f| f.puts(line) }
+        rescue => e
+          puts "[RABPro][WARN] Could not write to log file: #{e.message}"
+        end
       end
     end
 
