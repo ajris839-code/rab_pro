@@ -23,7 +23,29 @@ module RABPro
         :is_override,       # true if quantity was manually set
         :notes,
         keyword_init: true
-      )
+      ) do
+        # Custom to_h method to sanitize JSON-unsafe values
+        def to_h
+          super.each_with_object({}) do |(k, v), memo|
+            memo[k] = _sanitize_value(v)
+          end
+        end
+
+        private
+
+        def _sanitize_value(value)
+          case value
+          when Float
+            value.finite? ? value : 0.0
+          when Hash
+            value.each_with_object({}) { |(k, v), m| m[k] = _sanitize_value(v) }
+          when Array
+            value.map { |v| _sanitize_value(v) }
+          else
+            value
+          end
+        end
+      end
 
       QTOSummary = Struct.new(
         :category_id,
@@ -226,15 +248,23 @@ module RABPro
       def _geo_detail(geo)
         return {} unless geo
         {
-          volume_m3:  geo.volume_m3,
-          area_m2:    geo.surface_area_m2,
-          floor_m2:   geo.floor_area_m2,
-          wall_m2:    geo.wall_area_m2,
-          length_m:   geo.length_m,
-          width_m:    geo.width_m,
-          height_m:   geo.height_m,
+          volume_m3:  _safe_float(geo.volume_m3),
+          area_m2:    _safe_float(geo.surface_area_m2),
+          floor_m2:   _safe_float(geo.floor_area_m2),
+          wall_m2:    _safe_float(geo.wall_area_m2),
+          length_m:   _safe_float(geo.length_m),
+          width_m:    _safe_float(geo.width_m),
+          height_m:   _safe_float(geo.height_m),
           is_solid:   geo.is_solid
         }
+      end
+
+      def _safe_float(value)
+        return 0.0 if value.nil?
+        return 0.0 unless value.is_a?(Float) || value.is_a?(Integer)
+        
+        f = value.to_f
+        f.finite? ? f : 0.0
       end
 
       def _stats(items, elapsed)
