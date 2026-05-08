@@ -1,0 +1,562 @@
+<!-- ================================================================
+     RAB Pro — RAB Panel HTML (injected into main_panel.html tab)
+     This file provides the complete HTML/JS for the RAB tab.
+     It is embedded by the main panel via JS import or inline merge.
+================================================================ -->
+
+<!-- ============================================================
+     RAB TAB CONTENT (replaces the stub in main_panel.html)
+============================================================ -->
+<div id="rab-content">
+
+  <!-- Project info bar -->
+  <div class="card" id="project-info-card">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>📋 Info Proyek</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="project-info-body">
+      <div class="field-grid">
+        <label>Nama Proyek<input class="field-input" id="pi-name" placeholder="Nama proyek..."></label>
+        <label>Pemilik<input class="field-input" id="pi-owner" placeholder="Pemilik proyek..."></label>
+        <label>Lokasi<input class="field-input" id="pi-location" placeholder="Alamat / lokasi..."></label>
+        <label>Konsultan<input class="field-input" id="pi-consultant" placeholder="Nama konsultan..."></label>
+        <label>Kontraktor<input class="field-input" id="pi-contractor" placeholder="Nama kontraktor..."></label>
+        <label>Tanggal Mulai<input class="field-input" id="pi-start" type="date"></label>
+      </div>
+      <button class="btn btn-sm" onclick="RABApp.saveProjectInfo()">Simpan Info Proyek</button>
+    </div>
+  </div>
+
+  <!-- Financial settings -->
+  <div class="card">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>💰 Overhead, Profit & PPN</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="pct-row">
+        <label>Overhead <input class="pct-input" id="fin-overhead" type="number" value="10" min="0" max="50" step="0.5">%</label>
+        <label>Profit <input class="pct-input" id="fin-profit" type="number" value="10" min="0" max="50" step="0.5">%</label>
+        <label>PPN <input class="pct-input" id="fin-ppn" type="number" value="11" min="0" max="20" step="0.5">%</label>
+        <button class="btn btn-sm" onclick="RABApp.saveFinancialSettings()">Terapkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="RABApp.runQTO()">
+      <span id="qto-spinner" class="spinner" style="display:none"></span>
+      📐 Hitung QTO
+    </button>
+    <button class="btn btn-primary" onclick="RABApp.buildRAB()">
+      <span id="rab-spinner" class="spinner" style="display:none"></span>
+      📊 Bangun RAB
+    </button>
+  </div>
+
+  <!-- QTO Summary -->
+  <div class="card" id="qto-card" style="display:none">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>📐 Hasil Quantity Takeoff</span>
+      <span id="qto-count" class="badge">0 item</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table class="data-table" id="qto-table">
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th>Uraian</th>
+            <th>Qty</th>
+            <th>Sat</th>
+            <th>Entitas</th>
+          </tr>
+        </thead>
+        <tbody id="qto-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RAB Table -->
+  <div class="card" id="rab-card" style="display:none">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>📊 Rencana Anggaran Biaya</span>
+      <span id="rab-total-label" class="badge green">—</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="rab-table-wrapper">
+        <table class="data-table" id="rab-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Kode</th>
+              <th>Uraian Pekerjaan</th>
+              <th>Sat</th>
+              <th>Volume</th>
+              <th>Harga Satuan</th>
+              <th>Jumlah</th>
+            </tr>
+          </thead>
+          <tbody id="rab-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grand Total block -->
+  <div id="total-block" style="display:none">
+    <div class="total-grid">
+      <div class="total-row"><span>Sub Total Pekerjaan</span><span id="gt-subtotal">—</span></div>
+      <div class="total-row"><span id="gt-ovh-label">Overhead</span><span id="gt-overhead">—</span></div>
+      <div class="total-row"><span id="gt-pft-label">Profit</span><span id="gt-profit">—</span></div>
+      <div class="total-row"><span id="gt-ppn-label">PPN</span><span id="gt-ppn">—</span></div>
+      <div class="total-row grand"><span>TOTAL RAB</span><span id="gt-grand">—</span></div>
+      <div class="terbilang-row"><em id="gt-terbilang"></em></div>
+    </div>
+  </div>
+
+  <!-- Export buttons (shown after RAB built) -->
+  <div id="export-block" class="btn-row" style="display:none">
+    <button class="btn btn-primary" onclick="RABApp.exportExcel()">📥 Export Excel (.xlsx)</button>
+    <button class="btn" onclick="RABApp.exportPDF()">📄 Export PDF</button>
+    <button class="btn" onclick="RABApp.aiAnalyzeRAB()">🤖 Analisis AI</button>
+    <button class="btn" onclick="RABApp.aiDetectAnomalies()">🔍 Deteksi Anomali</button>
+  </div>
+
+  <!-- AI Analysis result -->
+  <div class="card" id="ai-analysis-card" style="display:none">
+    <div class="card-header" style="cursor:default">
+      <span>🤖 Analisis AI</span>
+      <button class="btn btn-sm" onclick="document.getElementById('ai-analysis-card').style.display='none'">✕</button>
+    </div>
+    <div class="card-body">
+      <div id="ai-analysis-content" style="font-size:12px;line-height:1.7;white-space:pre-wrap"></div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* ---- RAB-specific styles ---------------------------------------- */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.field-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  gap: 3px;
+}
+
+.field-input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.field-input:focus { outline: 2px solid var(--accent); }
+
+.pct-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pct-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pct-input {
+  width: 55px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  text-align: right;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.data-table th {
+  background: var(--bg3);
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.data-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.data-table tr:hover td { background: var(--bg3); }
+.data-table tr.section-row td {
+  background: var(--accent-bg);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--accent);
+  padding: 6px 8px;
+}
+
+.data-table tr.subtotal-row td {
+  background: var(--bg2);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table .ctr { text-align: center; }
+
+.total-grid {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.total-row.grand {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 14px;
+}
+
+.terbilang-row {
+  padding: 6px 14px;
+  font-size: 10px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg3);
+  color: var(--text2);
+}
+
+.badge.green {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge.green { background: #1b3a1e; color: #81c784; }
+}
+
+.card-toggle { font-size: 11px; color: var(--text3); transition: transform 0.2s; }
+</style>
+
+<script>
+// ================================================================
+// RABApp — Fase 2 JavaScript controller
+// Extends the base App object from main_panel.html
+// ================================================================
+const RABApp = (() => {
+
+  let _qtoData     = null;
+  let _rabDocument = null;
+  let _symbol      = 'BND$';
+
+  // ---- Initialization --------------------------------------------
+  function init(settings) {
+    _symbol = settings.currency_symbol || 'BND$';
+    _loadFinancialSettings();
+  }
+
+  // ---- Project Info -----------------------------------------------
+  function saveProjectInfo() {
+    const info = {
+      name:       val('pi-name'),
+      owner:      val('pi-owner'),
+      location:   val('pi-location'),
+      consultant: val('pi-consultant'),
+      contractor: val('pi-contractor'),
+      start_date: val('pi-start'),
+    };
+    ruby('saveProjectInfo', info);
+  }
+
+  // ---- Financial Settings ----------------------------------------
+  function _loadFinancialSettings() { ruby('getFinancialSettings'); }
+
+  function onFinancialSettings(data) {
+    setVal('fin-overhead', data.overhead_pct);
+    setVal('fin-profit',   data.profit_pct);
+    setVal('fin-ppn',      data.ppn_pct);
+    _symbol = data.symbol || _symbol;
+  }
+
+  function saveFinancialSettings() {
+    ruby('saveFinancialSettings', {
+      overhead_pct: parseFloat(val('fin-overhead')),
+      profit_pct:   parseFloat(val('fin-profit')),
+      ppn_pct:      parseFloat(val('fin-ppn')),
+    });
+    App.toast('Pengaturan keuangan disimpan ✓');
+  }
+
+  // ---- QTO -------------------------------------------------------
+  function runQTO() {
+    spinner('qto-spinner', true);
+    ruby('runQTO');
+  }
+
+  function onQTOComplete(data) {
+    spinner('qto-spinner', false);
+    _qtoData = data;
+
+    const summary = data.summary || {};
+    const items   = Object.values(summary);
+
+    qs('#qto-count').textContent = `${items.length} kategori`;
+    qs('#qto-card').style.display = 'block';
+
+    const tbody = qs('#qto-tbody');
+    tbody.innerHTML = items.map(s => `
+      <tr>
+        <td class="ctr">${esc(s.category_code)}</td>
+        <td>${esc(s.category_name)}</td>
+        <td class="num">${fmt3(s.total_quantity)}</td>
+        <td class="ctr">${esc(s.unit)}</td>
+        <td class="ctr">${s.item_count}</td>
+      </tr>
+    `).join('');
+
+    App.toast(`QTO selesai: ${items.length} kategori, ${data.stats?.total_items || 0} entitas`);
+  }
+
+  // ---- RAB Build -------------------------------------------------
+  function buildRAB() {
+    spinner('rab-spinner', true);
+    ruby('buildRAB', {
+      overhead_pct: parseFloat(val('fin-overhead')),
+      profit_pct:   parseFloat(val('fin-profit')),
+      ppn_pct:      parseFloat(val('fin-ppn')),
+    });
+  }
+
+  function onRABComplete(doc) {
+    spinner('rab-spinner', false);
+    _rabDocument = doc;
+
+    qs('#rab-card').style.display   = 'block';
+    qs('#total-block').style.display = 'block';
+    qs('#export-block').style.display = 'block';
+
+    // Update total badge
+    qs('#rab-total-label').textContent = fmtCur(doc.grand_total);
+    qs('#rab-total-label').classList.add('green');
+
+    // Render table
+    _renderRABTable(doc);
+
+    // Render totals
+    qs('#gt-subtotal').textContent  = fmtCur(doc.subtotal);
+    qs('#gt-ovh-label').textContent = `Overhead (${doc.overhead_pct}%)`;
+    qs('#gt-overhead').textContent  = fmtCur(doc.overhead);
+    qs('#gt-pft-label').textContent = `Profit (${doc.profit_pct}%)`;
+    qs('#gt-profit').textContent    = fmtCur(doc.profit);
+    qs('#gt-ppn-label').textContent = `PPN (${doc.ppn_pct}%)`;
+    qs('#gt-ppn').textContent       = fmtCur(doc.ppn);
+    qs('#gt-grand').textContent     = fmtCur(doc.grand_total);
+    qs('#gt-terbilang').textContent = `Terbilang: ${doc.terbilang}`;
+
+    App.toast(`RAB berhasil dibuat: ${fmtCur(doc.grand_total)}`);
+  }
+
+  function _renderRABTable(doc) {
+    const tbody = qs('#rab-tbody');
+    let html = '';
+
+    (doc.sections || []).forEach(section => {
+      html += `<tr class="section-row"><td colspan="7">${esc(section.group_label.toUpperCase())}</td></tr>`;
+
+      (section.items || []).forEach((item, i) => {
+        const alt = i % 2 === 1 ? 'style="background:var(--bg2)"' : '';
+        html += `<tr ${alt}>
+          <td class="ctr">${item.no}</td>
+          <td class="ctr">${esc(item.category_code)}</td>
+          <td>${esc(item.category_name)}</td>
+          <td class="ctr">${esc(item.unit)}</td>
+          <td class="num">${fmt3(item.quantity)}</td>
+          <td class="num" style="cursor:pointer" title="Klik untuk lihat analisa"
+              onclick="RABApp.showAnalisa('${item.category_code}')">${fmtCur(item.unit_price)}</td>
+          <td class="num" style="font-weight:600">${fmtCur(item.total_price)}</td>
+        </tr>`;
+      });
+
+      html += `<tr class="subtotal-row">
+        <td colspan="6" class="num">Sub Total ${esc(section.group_label)}</td>
+        <td class="num">${fmtCur(section.section_total)}</td>
+      </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // ---- Export ----------------------------------------------------
+  function exportExcel() {
+    if (!_rabDocument) { App.toast('Bangun RAB terlebih dahulu'); return; }
+    ruby('exportExcel');
+  }
+
+  function exportPDF() {
+    if (!_rabDocument) { App.toast('Bangun RAB terlebih dahulu'); return; }
+    ruby('exportPDF');
+  }
+
+  function onExportComplete(data) {
+    App.toast(`Export ${data.format?.toUpperCase()} berhasil ✓`);
+    if (data.message) alert(data.message);
+  }
+
+  // ---- Analisa HS panel -----------------------------------------
+  function showAnalisa(code) {
+    App.toast(`Memuat analisa ${code}...`);
+    // Find category_id from code
+    // For now, show in AI chat panel
+    ruby('getHargaSatuan', code.toLowerCase().replace('.', '_'));
+  }
+
+  function onHargaSatuanLoaded(analisa) {
+    const lines = [`Analisa Harga Satuan: ${analisa.name} (per ${analisa.unit})\n`];
+    lines.push(`--- Material ---`);
+    (analisa.line_items || []).filter(i => i.type === 'material').forEach(i => {
+      lines.push(`  ${i.item}: ${i.koef} × ${fmtCur(i.harga)} = ${fmtCur(i.jumlah)}`);
+    });
+    lines.push(`--- Upah ---`);
+    (analisa.line_items || []).filter(i => i.type === 'upah').forEach(i => {
+      lines.push(`  ${i.item}: ${i.koef} OH × ${fmtCur(i.harga)} = ${fmtCur(i.jumlah)}`);
+    });
+    lines.push(`\nSub Total: ${fmtCur(analisa.subtotal)}`);
+    lines.push(`Overhead (${analisa.overhead_pct}%): ${fmtCur(analisa.overhead)}`);
+    lines.push(`Profit (${analisa.profit_pct}%): ${fmtCur(analisa.profit)}`);
+    lines.push(`\nHARGA SATUAN: ${fmtCur(analisa.grand_total)} / ${analisa.unit}`);
+
+    alert(lines.join('\n'));
+  }
+
+  // ---- AI Analysis -----------------------------------------------
+  function aiAnalyzeRAB() {
+    if (!_rabDocument) { App.toast('Bangun RAB terlebih dahulu'); return; }
+    App.toast('AI sedang menganalisis RAB...');
+    qs('#ai-analysis-card').style.display = 'block';
+    qs('#ai-analysis-content').textContent = 'Sedang menganalisis...';
+    ruby('aiAnalyzeRAB');
+  }
+
+  function aiDetectAnomalies() {
+    App.toast('AI sedang memeriksa anomali...');
+    qs('#ai-analysis-card').style.display = 'block';
+    qs('#ai-analysis-content').textContent = 'Sedang memeriksa anomali...';
+    ruby('aiDetectAnomalies');
+  }
+
+  function onAIAnalysis(data) {
+    qs('#ai-analysis-content').textContent = data.analysis || 'Tidak ada hasil.';
+  }
+
+  function toggleCard(header) {
+    const body   = header.nextElementSibling;
+    const toggle = header.querySelector('.card-toggle');
+    if (body) {
+      const closed = body.style.display === 'none';
+      body.style.display = closed ? '' : 'none';
+      if (toggle) toggle.style.transform = closed ? '' : 'rotate(-90deg)';
+    }
+  }
+
+  // ---- Utilities --------------------------------------------------
+  function ruby(action, payload) {
+    if (typeof sketchup !== 'undefined') sketchup[action] && sketchup[action](payload || {});
+  }
+
+  function qs(sel) { return document.querySelector(sel); }
+  function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+  function setVal(id, v) { const el = document.getElementById(id); if(el) el.value = v ?? ''; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmt3(n) { return parseFloat(n||0).toLocaleString('id-ID', {minimumFractionDigits:3,maximumFractionDigits:3}); }
+  function fmtCur(n) { return _symbol + ' ' + parseFloat(n||0).toLocaleString('id-ID', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function spinner(id, show) { const el = document.getElementById(id); if(el) el.style.display = show ? 'inline-block' : 'none'; }
+
+  return {
+    init, saveProjectInfo, saveFinancialSettings,
+    runQTO, onQTOComplete,
+    buildRAB, onRABComplete,
+    exportExcel, exportPDF, onExportComplete,
+    showAnalisa, onHargaSatuanLoaded,
+    aiAnalyzeRAB, aiDetectAnomalies, onAIAnalysis,
+    onFinancialSettings, toggleCard,
+    fmtCur  // expose for main panel
+  };
+
+})();
+
+// Hook into main panel's event dispatcher
+const _origOnRubyEvent = window.RABPro?.onRubyEvent;
+if (window.RABPro) {
+  window.RABPro.onRubyEvent = function(event, data) {
+    // Route Fase 2 events to RABApp
+    const fase2Events = {
+      onQTOComplete:         RABApp.onQTOComplete,
+      onRABComplete:         RABApp.onRABComplete,
+      onExportComplete:      RABApp.onExportComplete,
+      onHargaSatuanLoaded:   RABApp.onHargaSatuanLoaded,
+      onAIAnalysis:          RABApp.onAIAnalysis,
+      onFinancialSettings:   RABApp.onFinancialSettings,
+      onProjectInfoSaved:    () => App.toast('Info proyek disimpan ✓'),
+      onFinancialSettingsSaved: () => App.toast('Pengaturan keuangan disimpan ✓'),
+      onPriceUpdated:        () => App.toast('Harga diperbarui ✓'),
+      onQuantityOverrideSet: () => App.toast('Override qty disimpan ✓'),
+    };
+
+    if (fase2Events[event]) {
+      fase2Events[event](data);
+    } else if (_origOnRubyEvent) {
+      _origOnRubyEvent(event, data);
+    }
+  };
+}
+</script>

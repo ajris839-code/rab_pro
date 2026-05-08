@@ -1,0 +1,574 @@
+<!-- ================================================================
+     RAB Pro — Drawings Panel HTML (Fase 3)
+     Frontend for Gambar Teknis tab
+================================================================ -->
+
+<style>
+/* ---- Drawings-specific styles ---------------------------------- */
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.scene-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  position: relative;
+}
+
+.scene-card:hover { background: var(--bg3); border-color: var(--accent); }
+.scene-card.exists { border-color: var(--accent); }
+.scene-card.exists .scene-icon { color: var(--accent); }
+
+.scene-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+.scene-title { font-size: 11px; font-weight: 600; color: var(--text); }
+.scene-sub   { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+.scene-check {
+  position: absolute;
+  top: 5px; right: 6px;
+  font-size: 13px;
+  color: var(--accent);
+  display: none;
+}
+.scene-card.exists .scene-check { display: block; }
+
+.register-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.register-table th {
+  background: var(--bg3);
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.register-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.register-table tr:hover td { background: var(--bg3); }
+
+.status-badge {
+  display: inline-block;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.status-draft              { background: #fff3cd; color: #856404; }
+.status-issued_for_review  { background: #cfe2ff; color: #084298; }
+.status-issued_for_construction { background: #d1e7dd; color: #0f5132; }
+.status-superseded         { background: var(--bg3); color: var(--text3); }
+
+.export-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+
+.select-sm {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-draft             { background: #3a2f00; color: #ffc107; }
+  .status-issued_for_review { background: #0a1f3c; color: #6ea8fe; }
+  .status-issued_for_construction { background: #051b0e; color: #75b798; }
+}
+</style>
+
+<div id="drawings-content">
+
+  <!-- Scene Setup -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>🎬 Setup Scene SketchUp</span>
+      <span id="scene-exists-count" class="badge">—</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:11px;color:var(--text2);margin-bottom:10px">
+        Pilih scene yang ingin dibuat. Scene diperlukan sebelum gambar teknis dapat digenerate.
+      </p>
+      <div class="scene-grid" id="scene-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="DrawApp.createAllScenes()">
+          <span id="scene-spinner" class="spinner" style="display:none"></span>
+          ✦ Buat Semua Scene
+        </button>
+        <button class="btn" onclick="DrawApp.createSelectedScenes()">Buat Scene Dipilih</button>
+        <button class="btn btn-danger btn-sm" onclick="DrawApp.deleteScenes()">Hapus Scene RAB</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>📏 Dimensi & Anotasi Otomatis</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:11px;color:var(--text2);margin-bottom:10px">
+        Tambahkan dimensi linier, elevation marker, dan label luas ruangan secara otomatis ke scene aktif.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="DrawApp.autoDimension()">
+          <span id="dim-spinner" class="spinner" style="display:none"></span>
+          📏 Auto-Dimensioning
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Drawings -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>📐 Generate Gambar Teknis</span>
+    </div>
+    <div class="card-body">
+      <div class="export-options">
+        <label style="font-size:11px;font-weight:600">Ukuran Kertas:</label>
+        <select class="select-sm" id="paper-size">
+          <option value="A4">A4 (297×210)</option>
+          <option value="A3" selected>A3 (420×297)</option>
+          <option value="A2">A2 (594×420)</option>
+          <option value="A1">A1 (841×594)</option>
+          <option value="A0">A0 (1189×841)</option>
+        </select>
+        <label style="font-size:11px;font-weight:600">Lembar:</label>
+        <select class="select-sm" id="sheet-filter">
+          <option value="all">Semua Lembar</option>
+          <option value="architecture">Arsitektur (A-xx)</option>
+          <option value="structure">Struktur (S-xx)</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="DrawApp.generateDrawings()">
+          <span id="gen-spinner" class="spinner" style="display:none"></span>
+          🗂️ Generate Drawing Set (PDF/HTML)
+        </button>
+      </div>
+
+      <p style="font-size:10px;color:var(--text3);margin-top:6px">
+        Jika SketchUp Pro + LayOut tersedia, akan menghasilkan file .layout dan .pdf.
+        Jika tidak, menghasilkan HTML yang bisa dicetak ke PDF dari browser.
+      </p>
+    </div>
+  </div>
+
+  <!-- Export Individual -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>💾 Export Individual</span>
+    </div>
+    <div class="card-body">
+      <div class="export-options">
+        <label style="font-size:11px;font-weight:600">Scene:</label>
+        <select class="select-sm" id="export-scene" style="flex:1;min-width:140px">
+          <option value="">— Pilih Scene —</option>
+        </select>
+        <label style="font-size:11px;font-weight:600">Format:</label>
+        <select class="select-sm" id="export-format">
+          <option value="png">PNG (High-Res)</option>
+          <option value="dwg">DWG (AutoCAD)</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="DrawApp.exportSingle()">💾 Export Scene</button>
+        <button class="btn" onclick="DrawApp.batchExportPNG()">🖼️ Batch Export PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawing Register -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>📋 Drawing Register</span>
+      <span id="reg-count" class="badge">0 gambar</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div style="padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="DrawApp.populateRegister()">↺ Sync dari Sheet Config</button>
+        <button class="btn btn-sm" onclick="DrawApp.showAddDrawingDialog()">+ Tambah</button>
+      </div>
+      <div style="overflow-x:auto;max-height:300px;overflow-y:auto">
+        <table class="register-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Disiplin</th>
+              <th>Judul Gambar</th>
+              <th>Skala</th>
+              <th>Rev</th>
+              <th>Status</th>
+              <th>Update</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="register-tbody">
+            <tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3)">
+              Klik "Sync dari Sheet Config" untuk mengisi register
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Drawing Dialog (inline modal) -->
+<div id="add-drawing-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:var(--radius);padding:20px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.3)">
+    <h3 style="font-size:14px;margin-bottom:14px">Tambah Gambar Baru</h3>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;margin-bottom:10px">
+      Judul Gambar
+      <input class="field-input" id="add-title" placeholder="e.g. Denah Lantai 1">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;margin-bottom:10px">
+      Disiplin
+      <select class="select-sm" id="add-disc" style="width:100%">
+        <option value="architecture">Arsitektur</option>
+        <option value="structure">Struktur</option>
+        <option value="mep">MEP</option>
+        <option value="civil">Sipil</option>
+      </select>
+    </label>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;margin-bottom:14px">
+      Skala
+      <select class="select-sm" id="add-scale" style="width:100%">
+        <option value="1:50">1:50</option>
+        <option value="1:100" selected>1:100</option>
+        <option value="1:200">1:200</option>
+        <option value="1:500">1:500</option>
+      </select>
+    </label>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="DrawApp.closeAddDialog()">Batal</button>
+      <button class="btn btn-primary btn-sm" onclick="DrawApp.submitAddDrawing()">Tambah</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DrawApp — Fase 3 JavaScript controller
+// ================================================================
+const DrawApp = (() => {
+
+  let _scenes      = [];   // { id, name, description, type }
+  let _existingScenes = [];
+  let _selected    = new Set();
+  let _register    = [];
+
+  const SCENE_ICONS = {
+    floor_plan:     '📐',
+    roof_plan:      '🏠',
+    elevation:      '🏢',
+    section:        '✂️',
+    perspective_3d: '🎲'
+  };
+
+  // ---- Initialization -----------------------------------------------
+  function init() {
+    ruby('getSceneList');
+    ruby('getDrawingRegister');
+  }
+
+  // ---- Scene List ---------------------------------------------------
+  function onSceneList(data) {
+    _scenes         = data.definitions || [];
+    _existingScenes = data.existing    || [];
+    _renderSceneGrid();
+    _updateSceneDropdown();
+  }
+
+  function _renderSceneGrid() {
+    const grid = qs('#scene-grid');
+    const existCount = _existingScenes.length;
+    qs('#scene-exists-count').textContent = `${existCount} dibuat`;
+
+    grid.innerHTML = _scenes.map(s => {
+      const exists = _existingScenes.includes(s.name);
+      const icon   = SCENE_ICONS[s.type] || '📄';
+      const cls    = exists ? 'scene-card exists' : 'scene-card';
+      return `<div class="${cls}" data-id="${s.id}" onclick="DrawApp.toggleScene('${s.id}')">
+        <span class="scene-check">✓</span>
+        <span class="scene-icon">${icon}</span>
+        <div class="scene-title">${esc(s.description || s.name)}</div>
+        <div class="scene-sub">${esc(s.type?.replace('_',' ') || '')}</div>
+      </div>`;
+    }).join('');
+
+    // Update dropdown
+    _updateSceneDropdown();
+  }
+
+  function _updateSceneDropdown() {
+    const sel = qs('#export-scene');
+    if (!sel) return;
+    const all = [..._scenes.filter(s => _existingScenes.includes(s.name)),
+                 ..._existingScenes.filter(n => !_scenes.find(s => s.name === n)).map(n => ({name:n, description:n}))];
+    sel.innerHTML = '<option value="">— Pilih Scene —</option>' +
+      all.map(s => `<option value="${esc(s.name)}">${esc(s.description || s.name)}</option>`).join('');
+  }
+
+  function toggleScene(id) {
+    if (_selected.has(id)) _selected.delete(id);
+    else _selected.add(id);
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) card.classList.toggle('selected', _selected.has(id));
+  }
+
+  // ---- Scene creation -----------------------------------------------
+  function createAllScenes() {
+    spinner('scene-spinner', true);
+    ruby('createScenes', null);
+  }
+
+  function createSelectedScenes() {
+    if (_selected.size === 0) { App.toast('Pilih scene terlebih dahulu'); return; }
+    spinner('scene-spinner', true);
+    ruby('createScenes', Array.from(_selected));
+  }
+
+  function deleteScenes() {
+    if (!confirm('Hapus semua scene RAB Pro dari model ini?')) return;
+    ruby('deleteRABScenes');
+  }
+
+  function onScenesCreated(data) {
+    spinner('scene-spinner', false);
+    App.toast(`${data.count} scene berhasil dibuat ✓`);
+    ruby('getSceneList');  // refresh
+  }
+
+  function onScenesDeleted() {
+    App.toast('Scene RAB dihapus');
+    ruby('getSceneList');
+  }
+
+  // ---- Dimensioning -------------------------------------------------
+  function autoDimension() {
+    spinner('dim-spinner', true);
+    ruby('autoDimension');
+  }
+
+  function onAutoDimensionComplete(data) {
+    spinner('dim-spinner', false);
+    App.toast(`Auto-dimensioning selesai: ${data.count} anotasi ditambahkan ✓`);
+  }
+
+  // ---- Generate drawings --------------------------------------------
+  function generateDrawings() {
+    spinner('gen-spinner', true);
+    const paper = val('paper-size');
+    const filter = val('sheet-filter');
+    ruby('generateDrawings', { paper_size: paper, sheet_filter: filter });
+  }
+
+  function onDrawingsGenerated(data) {
+    spinner('gen-spinner', false);
+    if (data.success) {
+      App.toast(`Drawing set berhasil dibuat ✓`);
+      if (data.message) setTimeout(() => alert(data.message), 500);
+    } else {
+      App.toast(`Error: ${data.error || 'Gagal generate gambar'}`, 4000);
+    }
+  }
+
+  // ---- Export single ------------------------------------------------
+  function exportSingle() {
+    const scene  = val('export-scene');
+    const format = val('export-format');
+    if (!scene) { App.toast('Pilih scene terlebih dahulu'); return; }
+
+    if (format === 'png') ruby('exportScenePNG', { scene });
+    else ruby('exportDWG');
+  }
+
+  function batchExportPNG() {
+    App.toast('Batch export PNG dimulai...');
+    ruby('batchExport', { format: 'png' });
+  }
+
+  function onBatchExportComplete(data) {
+    const ok = (data.results || []).filter(r => r.success).length;
+    App.toast(`Batch export selesai: ${ok} file berhasil ✓`);
+  }
+
+  function onExportComplete(data) {
+    App.toast(`Export ${(data.format || '').toUpperCase()} berhasil ✓`);
+  }
+
+  // ---- Drawing register --------------------------------------------
+  function onDrawingRegister(data) {
+    _register = data.drawings || [];
+    qs('#reg-count').textContent = `${_register.length} gambar`;
+    _renderRegister();
+  }
+
+  function _renderRegister() {
+    const tbody = qs('#register-tbody');
+    if (!_register.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3)">
+        Belum ada drawing. Klik "Sync" atau "Tambah".
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = _register.map(d => {
+      const statusCls = 'status-' + (d.status || '').toLowerCase().replace(/\s+/g,'_');
+      const statusLabel = d.status || '—';
+      return `<tr>
+        <td style="font-family:monospace;font-weight:600">${esc(d.drawing_no)}</td>
+        <td>${esc(d.discipline)}</td>
+        <td>${esc(d.title)}</td>
+        <td style="text-align:center">${esc(d.scale || '—')}</td>
+        <td style="text-align:center;font-weight:bold">${esc(d.revision)}</td>
+        <td><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></td>
+        <td style="color:var(--text3);font-size:10px">${esc(d.updated_at?.slice(0,10) || '—')}</td>
+        <td>
+          <button class="btn btn-sm" style="padding:2px 6px;font-size:10px"
+            onclick="DrawApp.issueRevision('${esc(d.drawing_no)}')">Rev</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function populateRegister() {
+    ruby('addDrawing', { populate_from_config: true });
+    setTimeout(() => ruby('getDrawingRegister'), 500);
+  }
+
+  function showAddDrawingDialog() {
+    const modal = qs('#add-drawing-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeAddDialog() {
+    const modal = qs('#add-drawing-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function submitAddDrawing() {
+    ruby('addDrawing', {
+      title:      val('add-title'),
+      discipline: val('add-disc'),
+      scale:      val('add-scale'),
+    });
+    closeAddDialog();
+    setTimeout(() => ruby('getDrawingRegister'), 300);
+  }
+
+  function onDrawingAdded(data) {
+    App.toast(`Gambar ${data.drawing_no} ditambahkan ✓`);
+    ruby('getDrawingRegister');
+  }
+
+  function issueRevision(drawingNo) {
+    const desc = prompt(`Deskripsi revisi untuk ${drawingNo}:`);
+    if (!desc) return;
+    ruby('issueRevision', {
+      drawing_no:  drawingNo,
+      description: desc,
+      issued_by:   'RAB Pro',
+      status:      'issued_for_review'
+    });
+  }
+
+  function onRevisionIssued(data) {
+    App.toast(`Revisi ${data.revision} diterbitkan untuk ${data.drawing_no} ✓`);
+    ruby('getDrawingRegister');
+  }
+
+  function onStatusUpdated() {
+    ruby('getDrawingRegister');
+  }
+
+  function toggleCard(header) {
+    const body = header.nextElementSibling;
+    if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+  }
+
+  // ---- Utilities ---------------------------------------------------
+  function ruby(action, payload) {
+    if (typeof sketchup !== 'undefined') sketchup[action] && sketchup[action](payload || {});
+  }
+  function qs(sel) { return document.querySelector(sel); }
+  function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function spinner(id, show) { const el = document.getElementById(id); if(el) el.style.display = show ? 'inline-block' : 'none'; }
+
+  return {
+    init, toggleScene, toggleCard,
+    createAllScenes, createSelectedScenes, deleteScenes,
+    autoDimension,
+    generateDrawings, exportSingle, batchExportPNG,
+    populateRegister, showAddDrawingDialog, closeAddDialog, submitAddDrawing,
+    issueRevision,
+    // Event handlers
+    onSceneList, onScenesCreated, onScenesDeleted,
+    onAutoDimensionComplete, onDrawingsGenerated,
+    onBatchExportComplete, onExportComplete,
+    onDrawingRegister, onDrawingAdded, onRevisionIssued, onStatusUpdated
+  };
+
+})();
+
+// Hook Fase 3 events into main panel dispatcher
+;(function() {
+  const orig = window.RABPro?.onRubyEvent;
+  if (!window.RABPro) return;
+  const fase3 = {
+    onSceneList:            DrawApp.onSceneList,
+    onScenesCreated:        DrawApp.onScenesCreated,
+    onScenesDeleted:        DrawApp.onScenesDeleted,
+    onSceneCreated:         (d) => { App.toast(`Scene ${d.name} dibuat ✓`); DrawApp.init(); },
+    onAutoDimensionComplete: DrawApp.onAutoDimensionComplete,
+    onDrawingsGenerated:    DrawApp.onDrawingsGenerated,
+    onBatchExportComplete:  DrawApp.onBatchExportComplete,
+    onDrawingRegister:      DrawApp.onDrawingRegister,
+    onDrawingAdded:         DrawApp.onDrawingAdded,
+    onRevisionIssued:       DrawApp.onRevisionIssued,
+    onStatusUpdated:        DrawApp.onStatusUpdated,
+  };
+  window.RABPro.onRubyEvent = function(event, data) {
+    if (fase3[event]) fase3[event](data);
+    else if (orig) orig(event, data);
+  };
+})();
+
+// Init on load
+setTimeout(() => DrawApp.init(), 400);
+</script>

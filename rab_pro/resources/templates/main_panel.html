@@ -1,0 +1,2992 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAB Pro</title>
+  <style>
+    /* ================================================================
+       RAB Pro Panel — Complete SPA stylesheet
+       Adapts to SketchUp's OS chrome (light/dark detected via JS)
+    ================================================================ */
+    :root {
+      --bg:        #ffffff;
+      --bg2:       #f4f4f4;
+      --bg3:       #e8e8e8;
+      --border:    rgba(0,0,0,0.10);
+      --text:      #1a1a1a;
+      --text2:     #555;
+      --text3:     #888;
+      --accent:    #0071e3;
+      --accent-bg: #e8f2ff;
+      --danger:    #d32f2f;
+      --success:   #2e7d32;
+      --warning:   #f57c00;
+      --radius:    8px;
+      --radius-sm: 4px;
+      --shadow:    0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg:        #1e1e1e;
+        --bg2:       #2a2a2a;
+        --bg3:       #363636;
+        --border:    rgba(255,255,255,0.10);
+        --text:      #e8e8e8;
+        --text2:     #aaa;
+        --text3:     #666;
+        --accent:    #4da6ff;
+        --accent-bg: #1a2840;
+        --shadow:    0 1px 3px rgba(0,0,0,0.3);
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---------------------------------------------------------- */
+    .header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .header-logo {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.3px;
+    }
+
+    .header-model {
+      flex: 1;
+      font-size: 11px;
+      color: var(--text3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .header-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 4px 8px;
+      font-size: 11px;
+      color: var(--text2);
+      cursor: pointer;
+    }
+    .header-btn:hover { background: var(--bg3); }
+
+    /* ---- Tab bar --------------------------------------------------------- */
+    .tabs {
+      display: flex;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      overflow-x: auto;
+    }
+
+    .tab {
+      flex: 1;
+      min-width: 60px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .tab:hover { color: var(--text); background: var(--bg3); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ---- Main content area ----------------------------------------------- */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .panel { display: none; padding: 12px; }
+    .panel.active { display: block; }
+
+    /* ---- Cards & sections ------------------------------------------------ */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .card-body { padding: 10px 12px; }
+
+    /* ---- Stats grid ------------------------------------------------------ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .stat-cell {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    /* ---- Entity list ----------------------------------------------------- */
+    .entity-list {
+      list-style: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .entity-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .entity-item:hover { background: var(--bg3); }
+    .entity-item:last-child { border-bottom: none; }
+
+    .entity-type-badge {
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-weight: 600;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .badge-component { background: #dbeafe; color: #1d4ed8; }
+    .badge-group     { background: #dcfce7; color: #15803d; }
+    .badge-face      { background: #fef3c7; color: #92400e; }
+
+    @media (prefers-color-scheme: dark) {
+      .badge-component { background: #1e3a5f; color: #93c5fd; }
+      .badge-group     { background: #14532d; color: #86efac; }
+      .badge-face      { background: #451a03; color: #fde68a; }
+    }
+
+    .entity-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .entity-layer { font-size: 10px; color: var(--text3); }
+
+    .entity-tag {
+      font-size: 10px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      background: var(--accent-bg);
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* ---- Category selector ----------------------------------------------- */
+    .cat-group-header {
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: var(--bg3);
+    }
+
+    .cat-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      cursor: pointer;
+      gap: 8px;
+      font-size: 12px;
+    }
+
+    .cat-item:hover { background: var(--bg3); }
+    .cat-code { font-size: 10px; color: var(--text3); min-width: 28px; }
+    .cat-name { flex: 1; }
+    .cat-unit { font-size: 10px; color: var(--accent); }
+
+    /* ---- Search ---------------------------------------------------------- */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--border);
+      gap: 6px;
+    }
+
+    .search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      outline: none;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    /* ---- Buttons --------------------------------------------------------- */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text);
+      transition: all 0.1s;
+    }
+
+    .btn:hover { background: var(--bg3); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+
+    .btn-danger {
+      background: none;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ---- Empty state ----------------------------------------------------- */
+    .empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text3);
+    }
+
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-title { font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+    .empty-desc { font-size: 11px; line-height: 1.5; }
+
+    /* ---- Toast ----------------------------------------------------------- */
+    #toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(40px);
+      background: var(--text);
+      color: var(--bg);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      opacity: 0;
+      transition: all 0.25s;
+      z-index: 9999;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ---- Loading spinner ------------------------------------------------- */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Settings form --------------------------------------------------- */
+    .settings-group { margin-bottom: 16px; }
+    .settings-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .settings-input {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .settings-input:focus { outline: 2px solid var(--accent); }
+
+    .settings-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .toggle {
+      width: 32px;
+      height: 18px;
+      background: var(--bg3);
+      border-radius: 9px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle.on { background: var(--accent); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+    .toggle.on::after { left: 16px; }
+
+    /* ---- AI Chat --------------------------------------------------------- */
+    .chat-messages {
+      height: 240px;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .msg-bubble {
+      max-width: 85%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .msg-bubble.user {
+      align-self: flex-end;
+      background: var(--accent);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+
+    .msg-bubble.ai {
+      align-self: flex-start;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 2px;
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 6px;
+      padding: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 12px;
+      outline: none;
+    }
+
+    .chat-input:focus { border-color: var(--accent); }
+
+  </style>
+</head>
+<body>
+
+<!-- =========================================================
+     HEADER
+========================================================= -->
+<div class="header">
+  <div class="header-logo">RAB Pro</div>
+  <div class="header-model" id="model-title">Memuat model...</div>
+  <button class="header-btn" onclick="App.refreshModel()">↻</button>
+  <button class="header-btn" onclick="App.showTab('settings')">⚙</button>
+</div>
+
+<!-- =========================================================
+     TAB BAR
+========================================================= -->
+<div class="tabs">
+  <div class="tab active" data-tab="inspector" onclick="App.showTab('inspector')">Inspeksi</div>
+  <div class="tab" data-tab="tagger"    onclick="App.showTab('tagger')">Tag</div>
+  <div class="tab" data-tab="rab"       onclick="App.showTab('rab')">RAB</div>
+  <div class="tab" data-tab="drawings"  onclick="App.showTab('drawings')">Gambar</div>
+  <div class="tab" data-tab="ai"        onclick="App.showTab('ai')">AI Chat</div>
+  <div class="tab" data-tab="settings"  onclick="App.showTab('settings')">Pengaturan</div>
+</div>
+
+<!-- =========================================================
+     CONTENT PANELS
+========================================================= -->
+<div class="content">
+
+  <!-- ---- INSPECTOR PANEL ----------------------------------------- -->
+  <div id="panel-inspector" class="panel active">
+
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-cell"><div class="stat-num" id="stat-components">—</div><div class="stat-label">Komponen</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-groups">—</div><div class="stat-label">Group</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-faces">—</div><div class="stat-label">Faces</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-layers">—</div><div class="stat-label">Layer</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-materials">—</div><div class="stat-label">Material</div></div>
+      <div class="stat-cell"><div class="stat-num" id="stat-defs">—</div><div class="stat-label">Definisi</div></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="App.inspectModel()">
+        <span id="inspect-spinner" style="display:none" class="spinner"></span>
+        Baca Model
+      </button>
+      <button class="btn" onclick="App.filterEntities('all')">Semua</button>
+      <button class="btn" onclick="App.filterEntities('component')">Komponen</button>
+      <button class="btn" onclick="App.filterEntities('group')">Group</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header" onclick="App.toggleCard(this)">
+        <span>Entitas Model</span>
+        <span id="entity-count-label">0 entitas</span>
+      </div>
+      <div class="search-bar">
+        <span style="color:var(--text3);font-size:14px;">🔍</span>
+        <input class="search-input" type="text" placeholder="Cari nama, layer, kategori..."
+               oninput="App.filterEntityList(this.value)">
+      </div>
+      <ul class="entity-list" id="entity-list">
+        <li style="padding:20px;text-align:center;color:var(--text3);font-size:12px;">
+          Klik "Baca Model" untuk melihat entitas
+        </li>
+      </ul>
+    </div>
+
+    <div class="card" id="bounds-card" style="display:none">
+      <div class="card-header">Batas Model (Bounding Box)</div>
+      <div class="card-body" id="bounds-body"></div>
+    </div>
+
+  </div>
+
+  <!-- ---- TAGGER PANEL -------------------------------------------- -->
+  <div id="panel-tagger" class="panel">
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="App.autoTag()">
+        <span id="autotag-spinner" style="display:none" class="spinner"></span>
+        ✦ Auto-tag Semua
+      </button>
+      <button class="btn btn-danger btn-sm" onclick="App.clearAllTags()">Hapus Semua Tag</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span>Entitas Ter-tag</span>
+        <span id="tagged-count">0</span>
+      </div>
+      <ul class="entity-list" id="tagged-list">
+        <div class="empty">
+          <div class="empty-icon">🏷️</div>
+          <div class="empty-title">Belum ada tag</div>
+          <div class="empty-desc">Klik Auto-tag untuk mendeteksi<br>kategori pekerjaan secara otomatis</div>
+        </div>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Library Kategori Pekerjaan</div>
+      <div class="search-bar">
+        <span style="color:var(--text3);font-size:14px;">🔍</span>
+        <input class="search-input" type="text" placeholder="Cari kategori pekerjaan..."
+               oninput="App.filterCategories(this.value)">
+      </div>
+      <div id="category-list" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+
+  </div>
+
+  <!-- ---- RAB PANEL ----------------------------------------------- -->
+  <div id="panel-rab" class="panel">
+<!-- ================================================================
+     RAB Pro — RAB Panel HTML (injected into main_panel.html tab)
+     This file provides the complete HTML/JS for the RAB tab.
+     It is embedded by the main panel via JS import or inline merge.
+================================================================ -->
+
+<!-- ============================================================
+     RAB TAB CONTENT (replaces the stub in main_panel.html)
+============================================================ -->
+<div id="rab-content">
+
+  <!-- Project info bar -->
+  <div class="card" id="project-info-card">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>📋 Info Proyek</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body" id="project-info-body">
+      <div class="field-grid">
+        <label>Nama Proyek<input class="field-input" id="pi-name" placeholder="Nama proyek..."></label>
+        <label>Pemilik<input class="field-input" id="pi-owner" placeholder="Pemilik proyek..."></label>
+        <label>Lokasi<input class="field-input" id="pi-location" placeholder="Alamat / lokasi..."></label>
+        <label>Konsultan<input class="field-input" id="pi-consultant" placeholder="Nama konsultan..."></label>
+        <label>Kontraktor<input class="field-input" id="pi-contractor" placeholder="Nama kontraktor..."></label>
+        <label>Tanggal Mulai<input class="field-input" id="pi-start" type="date"></label>
+      </div>
+      <button class="btn btn-sm" onclick="RABApp.saveProjectInfo()">Simpan Info Proyek</button>
+    </div>
+  </div>
+
+  <!-- Financial settings -->
+  <div class="card">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>💰 Overhead, Profit & PPN</span>
+      <span class="card-toggle">▼</span>
+    </div>
+    <div class="card-body">
+      <div class="pct-row">
+        <label>Overhead <input class="pct-input" id="fin-overhead" type="number" value="10" min="0" max="50" step="0.5">%</label>
+        <label>Profit <input class="pct-input" id="fin-profit" type="number" value="10" min="0" max="50" step="0.5">%</label>
+        <label>PPN <input class="pct-input" id="fin-ppn" type="number" value="11" min="0" max="20" step="0.5">%</label>
+        <button class="btn btn-sm" onclick="RABApp.saveFinancialSettings()">Terapkan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="RABApp.runQTO()">
+      <span id="qto-spinner" class="spinner" style="display:none"></span>
+      📐 Hitung QTO
+    </button>
+    <button class="btn btn-primary" onclick="RABApp.buildRAB()">
+      <span id="rab-spinner" class="spinner" style="display:none"></span>
+      📊 Bangun RAB
+    </button>
+  </div>
+
+  <!-- QTO Summary -->
+  <div class="card" id="qto-card" style="display:none">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>📐 Hasil Quantity Takeoff</span>
+      <span id="qto-count" class="badge">0 item</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <table class="data-table" id="qto-table">
+        <thead>
+          <tr>
+            <th>Kode</th>
+            <th>Uraian</th>
+            <th>Qty</th>
+            <th>Sat</th>
+            <th>Entitas</th>
+          </tr>
+        </thead>
+        <tbody id="qto-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RAB Table -->
+  <div class="card" id="rab-card" style="display:none">
+    <div class="card-header" onclick="RABApp.toggleCard(this)">
+      <span>📊 Rencana Anggaran Biaya</span>
+      <span id="rab-total-label" class="badge green">—</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="rab-table-wrapper">
+        <table class="data-table" id="rab-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Kode</th>
+              <th>Uraian Pekerjaan</th>
+              <th>Sat</th>
+              <th>Volume</th>
+              <th>Harga Satuan</th>
+              <th>Jumlah</th>
+            </tr>
+          </thead>
+          <tbody id="rab-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Grand Total block -->
+  <div id="total-block" style="display:none">
+    <div class="total-grid">
+      <div class="total-row"><span>Sub Total Pekerjaan</span><span id="gt-subtotal">—</span></div>
+      <div class="total-row"><span id="gt-ovh-label">Overhead</span><span id="gt-overhead">—</span></div>
+      <div class="total-row"><span id="gt-pft-label">Profit</span><span id="gt-profit">—</span></div>
+      <div class="total-row"><span id="gt-ppn-label">PPN</span><span id="gt-ppn">—</span></div>
+      <div class="total-row grand"><span>TOTAL RAB</span><span id="gt-grand">—</span></div>
+      <div class="terbilang-row"><em id="gt-terbilang"></em></div>
+    </div>
+  </div>
+
+  <!-- Export buttons (shown after RAB built) -->
+  <div id="export-block" class="btn-row" style="display:none">
+    <button class="btn btn-primary" onclick="RABApp.exportExcel()">📥 Export Excel (.xlsx)</button>
+    <button class="btn" onclick="RABApp.exportPDF()">📄 Export PDF</button>
+    <button class="btn" onclick="RABApp.aiAnalyzeRAB()">🤖 Analisis AI</button>
+    <button class="btn" onclick="RABApp.aiDetectAnomalies()">🔍 Deteksi Anomali</button>
+  </div>
+
+  <!-- AI Analysis result -->
+  <div class="card" id="ai-analysis-card" style="display:none">
+    <div class="card-header" style="cursor:default">
+      <span>🤖 Analisis AI</span>
+      <button class="btn btn-sm" onclick="document.getElementById('ai-analysis-card').style.display='none'">✕</button>
+    </div>
+    <div class="card-body">
+      <div id="ai-analysis-content" style="font-size:12px;line-height:1.7;white-space:pre-wrap"></div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* ---- RAB-specific styles ---------------------------------------- */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.field-grid label {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  gap: 3px;
+}
+
+.field-input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.field-input:focus { outline: 2px solid var(--accent); }
+
+.pct-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pct-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.pct-input {
+  width: 55px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  text-align: right;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.data-table th {
+  background: var(--bg3);
+  padding: 6px 8px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.data-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.data-table tr:hover td { background: var(--bg3); }
+.data-table tr.section-row td {
+  background: var(--accent-bg);
+  font-weight: 700;
+  font-size: 11px;
+  color: var(--accent);
+  padding: 6px 8px;
+}
+
+.data-table tr.subtotal-row td {
+  background: var(--bg2);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table .ctr { text-align: center; }
+
+.total-grid {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.total-row.grand {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 14px;
+}
+
+.terbilang-row {
+  padding: 6px 14px;
+  font-size: 10px;
+  color: var(--text3);
+  font-style: italic;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg3);
+  color: var(--text2);
+}
+
+.badge.green {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge.green { background: #1b3a1e; color: #81c784; }
+}
+
+.card-toggle { font-size: 11px; color: var(--text3); transition: transform 0.2s; }
+</style>
+
+<script>
+// ================================================================
+// RABApp — Fase 2 JavaScript controller
+// Extends the base App object from main_panel.html
+// ================================================================
+const RABApp = (() => {
+
+  let _qtoData     = null;
+  let _rabDocument = null;
+  let _symbol      = 'BND$';
+
+  // ---- Initialization --------------------------------------------
+  function init(settings) {
+    _symbol = settings.currency_symbol || 'BND$';
+    _loadFinancialSettings();
+  }
+
+  // ---- Project Info -----------------------------------------------
+  function saveProjectInfo() {
+    const info = {
+      name:       val('pi-name'),
+      owner:      val('pi-owner'),
+      location:   val('pi-location'),
+      consultant: val('pi-consultant'),
+      contractor: val('pi-contractor'),
+      start_date: val('pi-start'),
+    };
+    ruby('saveProjectInfo', info);
+  }
+
+  // ---- Financial Settings ----------------------------------------
+  function _loadFinancialSettings() { ruby('getFinancialSettings'); }
+
+  function onFinancialSettings(data) {
+    setVal('fin-overhead', data.overhead_pct);
+    setVal('fin-profit',   data.profit_pct);
+    setVal('fin-ppn',      data.ppn_pct);
+    _symbol = data.symbol || _symbol;
+  }
+
+  function saveFinancialSettings() {
+    ruby('saveFinancialSettings', {
+      overhead_pct: parseFloat(val('fin-overhead')),
+      profit_pct:   parseFloat(val('fin-profit')),
+      ppn_pct:      parseFloat(val('fin-ppn')),
+    });
+    App.toast('Pengaturan keuangan disimpan ✓');
+  }
+
+  // ---- QTO -------------------------------------------------------
+  function runQTO() {
+    spinner('qto-spinner', true);
+    ruby('runQTO');
+  }
+
+  function onQTOComplete(data) {
+    spinner('qto-spinner', false);
+    _qtoData = data;
+
+    const summary = data.summary || {};
+    const items   = Object.values(summary);
+
+    qs('#qto-count').textContent = `${items.length} kategori`;
+    qs('#qto-card').style.display = 'block';
+
+    const tbody = qs('#qto-tbody');
+    tbody.innerHTML = items.map(s => `
+      <tr>
+        <td class="ctr">${esc(s.category_code)}</td>
+        <td>${esc(s.category_name)}</td>
+        <td class="num">${fmt3(s.total_quantity)}</td>
+        <td class="ctr">${esc(s.unit)}</td>
+        <td class="ctr">${s.item_count}</td>
+      </tr>
+    `).join('');
+
+    App.toast(`QTO selesai: ${items.length} kategori, ${data.stats?.total_items || 0} entitas`);
+  }
+
+  // ---- RAB Build -------------------------------------------------
+  function buildRAB() {
+    spinner('rab-spinner', true);
+    ruby('buildRAB', {
+      overhead_pct: parseFloat(val('fin-overhead')),
+      profit_pct:   parseFloat(val('fin-profit')),
+      ppn_pct:      parseFloat(val('fin-ppn')),
+    });
+  }
+
+  function onRABComplete(doc) {
+    spinner('rab-spinner', false);
+    _rabDocument = doc;
+
+    qs('#rab-card').style.display   = 'block';
+    qs('#total-block').style.display = 'block';
+    qs('#export-block').style.display = 'block';
+
+    // Update total badge
+    qs('#rab-total-label').textContent = fmtCur(doc.grand_total);
+    qs('#rab-total-label').classList.add('green');
+
+    // Render table
+    _renderRABTable(doc);
+
+    // Render totals
+    qs('#gt-subtotal').textContent  = fmtCur(doc.subtotal);
+    qs('#gt-ovh-label').textContent = `Overhead (${doc.overhead_pct}%)`;
+    qs('#gt-overhead').textContent  = fmtCur(doc.overhead);
+    qs('#gt-pft-label').textContent = `Profit (${doc.profit_pct}%)`;
+    qs('#gt-profit').textContent    = fmtCur(doc.profit);
+    qs('#gt-ppn-label').textContent = `PPN (${doc.ppn_pct}%)`;
+    qs('#gt-ppn').textContent       = fmtCur(doc.ppn);
+    qs('#gt-grand').textContent     = fmtCur(doc.grand_total);
+    qs('#gt-terbilang').textContent = `Terbilang: ${doc.terbilang}`;
+
+    App.toast(`RAB berhasil dibuat: ${fmtCur(doc.grand_total)}`);
+  }
+
+  function _renderRABTable(doc) {
+    const tbody = qs('#rab-tbody');
+    let html = '';
+
+    (doc.sections || []).forEach(section => {
+      html += `<tr class="section-row"><td colspan="7">${esc(section.group_label.toUpperCase())}</td></tr>`;
+
+      (section.items || []).forEach((item, i) => {
+        const alt = i % 2 === 1 ? 'style="background:var(--bg2)"' : '';
+        html += `<tr ${alt}>
+          <td class="ctr">${item.no}</td>
+          <td class="ctr">${esc(item.category_code)}</td>
+          <td>${esc(item.category_name)}</td>
+          <td class="ctr">${esc(item.unit)}</td>
+          <td class="num">${fmt3(item.quantity)}</td>
+          <td class="num" style="cursor:pointer" title="Klik untuk lihat analisa"
+              onclick="RABApp.showAnalisa('${item.category_code}')">${fmtCur(item.unit_price)}</td>
+          <td class="num" style="font-weight:600">${fmtCur(item.total_price)}</td>
+        </tr>`;
+      });
+
+      html += `<tr class="subtotal-row">
+        <td colspan="6" class="num">Sub Total ${esc(section.group_label)}</td>
+        <td class="num">${fmtCur(section.section_total)}</td>
+      </tr>`;
+    });
+
+    tbody.innerHTML = html;
+  }
+
+  // ---- Export ----------------------------------------------------
+  function exportExcel() {
+    if (!_rabDocument) { App.toast('Bangun RAB terlebih dahulu'); return; }
+    ruby('exportExcel');
+  }
+
+  function exportPDF() {
+    if (!_rabDocument) { App.toast('Bangun RAB terlebih dahulu'); return; }
+    ruby('exportPDF');
+  }
+
+  function onExportComplete(data) {
+    App.toast(`Export ${data.format?.toUpperCase()} berhasil ✓`);
+    if (data.message) alert(data.message);
+  }
+
+  // ---- Analisa HS panel -----------------------------------------
+  function showAnalisa(code) {
+    App.toast(`Memuat analisa ${code}...`);
+    // Find category_id from code
+    // For now, show in AI chat panel
+    ruby('getHargaSatuan', code.toLowerCase().replace('.', '_'));
+  }
+
+  function onHargaSatuanLoaded(analisa) {
+    const lines = [`Analisa Harga Satuan: ${analisa.name} (per ${analisa.unit})\n`];
+    lines.push(`--- Material ---`);
+    (analisa.line_items || []).filter(i => i.type === 'material').forEach(i => {
+      lines.push(`  ${i.item}: ${i.koef} × ${fmtCur(i.harga)} = ${fmtCur(i.jumlah)}`);
+    });
+    lines.push(`--- Upah ---`);
+    (analisa.line_items || []).filter(i => i.type === 'upah').forEach(i => {
+      lines.push(`  ${i.item}: ${i.koef} OH × ${fmtCur(i.harga)} = ${fmtCur(i.jumlah)}`);
+    });
+    lines.push(`\nSub Total: ${fmtCur(analisa.subtotal)}`);
+    lines.push(`Overhead (${analisa.overhead_pct}%): ${fmtCur(analisa.overhead)}`);
+    lines.push(`Profit (${analisa.profit_pct}%): ${fmtCur(analisa.profit)}`);
+    lines.push(`\nHARGA SATUAN: ${fmtCur(analisa.grand_total)} / ${analisa.unit}`);
+
+    alert(lines.join('\n'));
+  }
+
+  // ---- AI Analysis -----------------------------------------------
+  function aiAnalyzeRAB() {
+    if (!_rabDocument) { App.toast('Bangun RAB terlebih dahulu'); return; }
+    App.toast('AI sedang menganalisis RAB...');
+    qs('#ai-analysis-card').style.display = 'block';
+    qs('#ai-analysis-content').textContent = 'Sedang menganalisis...';
+    ruby('aiAnalyzeRAB');
+  }
+
+  function aiDetectAnomalies() {
+    App.toast('AI sedang memeriksa anomali...');
+    qs('#ai-analysis-card').style.display = 'block';
+    qs('#ai-analysis-content').textContent = 'Sedang memeriksa anomali...';
+    ruby('aiDetectAnomalies');
+  }
+
+  function onAIAnalysis(data) {
+    qs('#ai-analysis-content').textContent = data.analysis || 'Tidak ada hasil.';
+  }
+
+  function toggleCard(header) {
+    const body   = header.nextElementSibling;
+    const toggle = header.querySelector('.card-toggle');
+    if (body) {
+      const closed = body.style.display === 'none';
+      body.style.display = closed ? '' : 'none';
+      if (toggle) toggle.style.transform = closed ? '' : 'rotate(-90deg)';
+    }
+  }
+
+  // ---- Utilities --------------------------------------------------
+  function ruby(action, payload) {
+    if (typeof sketchup !== 'undefined') sketchup[action] && sketchup[action](payload || {});
+  }
+
+  function qs(sel) { return document.querySelector(sel); }
+  function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+  function setVal(id, v) { const el = document.getElementById(id); if(el) el.value = v ?? ''; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmt3(n) { return parseFloat(n||0).toLocaleString('id-ID', {minimumFractionDigits:3,maximumFractionDigits:3}); }
+  function fmtCur(n) { return _symbol + ' ' + parseFloat(n||0).toLocaleString('id-ID', {minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function spinner(id, show) { const el = document.getElementById(id); if(el) el.style.display = show ? 'inline-block' : 'none'; }
+
+  return {
+    init, saveProjectInfo, saveFinancialSettings,
+    runQTO, onQTOComplete,
+    buildRAB, onRABComplete,
+    exportExcel, exportPDF, onExportComplete,
+    showAnalisa, onHargaSatuanLoaded,
+    aiAnalyzeRAB, aiDetectAnomalies, onAIAnalysis,
+    onFinancialSettings, toggleCard,
+    fmtCur  // expose for main panel
+  };
+
+})();
+
+// Hook into main panel's event dispatcher
+const _origOnRubyEvent = window.RABPro?.onRubyEvent;
+if (window.RABPro) {
+  window.RABPro.onRubyEvent = function(event, data) {
+    // Route Fase 2 events to RABApp
+    const fase2Events = {
+      onQTOComplete:         RABApp.onQTOComplete,
+      onRABComplete:         RABApp.onRABComplete,
+      onExportComplete:      RABApp.onExportComplete,
+      onHargaSatuanLoaded:   RABApp.onHargaSatuanLoaded,
+      onAIAnalysis:          RABApp.onAIAnalysis,
+      onFinancialSettings:   RABApp.onFinancialSettings,
+      onProjectInfoSaved:    () => App.toast('Info proyek disimpan ✓'),
+      onFinancialSettingsSaved: () => App.toast('Pengaturan keuangan disimpan ✓'),
+      onPriceUpdated:        () => App.toast('Harga diperbarui ✓'),
+      onQuantityOverrideSet: () => App.toast('Override qty disimpan ✓'),
+    };
+
+    if (fase2Events[event]) {
+      fase2Events[event](data);
+    } else if (_origOnRubyEvent) {
+      _origOnRubyEvent(event, data);
+    }
+  };
+}
+</script>
+</div>
+
+  <!-- ---- DRAWINGS PANEL ------------------------------------------ -->
+  <div id="panel-drawings" class="panel">
+<!-- ================================================================
+     RAB Pro — Drawings Panel HTML (Fase 3)
+     Frontend for Gambar Teknis tab
+================================================================ -->
+
+<style>
+/* ---- Drawings-specific styles ---------------------------------- */
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.scene-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  position: relative;
+}
+
+.scene-card:hover { background: var(--bg3); border-color: var(--accent); }
+.scene-card.exists { border-color: var(--accent); }
+.scene-card.exists .scene-icon { color: var(--accent); }
+
+.scene-icon { font-size: 22px; margin-bottom: 4px; display: block; }
+.scene-title { font-size: 11px; font-weight: 600; color: var(--text); }
+.scene-sub   { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+.scene-check {
+  position: absolute;
+  top: 5px; right: 6px;
+  font-size: 13px;
+  color: var(--accent);
+  display: none;
+}
+.scene-card.exists .scene-check { display: block; }
+
+.register-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.register-table th {
+  background: var(--bg3);
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.register-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.register-table tr:hover td { background: var(--bg3); }
+
+.status-badge {
+  display: inline-block;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.status-draft              { background: #fff3cd; color: #856404; }
+.status-issued_for_review  { background: #cfe2ff; color: #084298; }
+.status-issued_for_construction { background: #d1e7dd; color: #0f5132; }
+.status-superseded         { background: var(--bg3); color: var(--text3); }
+
+.export-options {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 10px;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+}
+
+.select-sm {
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .status-draft             { background: #3a2f00; color: #ffc107; }
+  .status-issued_for_review { background: #0a1f3c; color: #6ea8fe; }
+  .status-issued_for_construction { background: #051b0e; color: #75b798; }
+}
+</style>
+
+<div id="drawings-content">
+
+  <!-- Scene Setup -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>🎬 Setup Scene SketchUp</span>
+      <span id="scene-exists-count" class="badge">—</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:11px;color:var(--text2);margin-bottom:10px">
+        Pilih scene yang ingin dibuat. Scene diperlukan sebelum gambar teknis dapat digenerate.
+      </p>
+      <div class="scene-grid" id="scene-grid">
+        <!-- Populated by JS -->
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="DrawApp.createAllScenes()">
+          <span id="scene-spinner" class="spinner" style="display:none"></span>
+          ✦ Buat Semua Scene
+        </button>
+        <button class="btn" onclick="DrawApp.createSelectedScenes()">Buat Scene Dipilih</button>
+        <button class="btn btn-danger btn-sm" onclick="DrawApp.deleteScenes()">Hapus Scene RAB</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Annotations -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>📏 Dimensi & Anotasi Otomatis</span>
+    </div>
+    <div class="card-body">
+      <p style="font-size:11px;color:var(--text2);margin-bottom:10px">
+        Tambahkan dimensi linier, elevation marker, dan label luas ruangan secara otomatis ke scene aktif.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="DrawApp.autoDimension()">
+          <span id="dim-spinner" class="spinner" style="display:none"></span>
+          📏 Auto-Dimensioning
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Drawings -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>📐 Generate Gambar Teknis</span>
+    </div>
+    <div class="card-body">
+      <div class="export-options">
+        <label style="font-size:11px;font-weight:600">Ukuran Kertas:</label>
+        <select class="select-sm" id="paper-size">
+          <option value="A4">A4 (297×210)</option>
+          <option value="A3" selected>A3 (420×297)</option>
+          <option value="A2">A2 (594×420)</option>
+          <option value="A1">A1 (841×594)</option>
+          <option value="A0">A0 (1189×841)</option>
+        </select>
+        <label style="font-size:11px;font-weight:600">Lembar:</label>
+        <select class="select-sm" id="sheet-filter">
+          <option value="all">Semua Lembar</option>
+          <option value="architecture">Arsitektur (A-xx)</option>
+          <option value="structure">Struktur (S-xx)</option>
+        </select>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="DrawApp.generateDrawings()">
+          <span id="gen-spinner" class="spinner" style="display:none"></span>
+          🗂️ Generate Drawing Set (PDF/HTML)
+        </button>
+      </div>
+
+      <p style="font-size:10px;color:var(--text3);margin-top:6px">
+        Jika SketchUp Pro + LayOut tersedia, akan menghasilkan file .layout dan .pdf.
+        Jika tidak, menghasilkan HTML yang bisa dicetak ke PDF dari browser.
+      </p>
+    </div>
+  </div>
+
+  <!-- Export Individual -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>💾 Export Individual</span>
+    </div>
+    <div class="card-body">
+      <div class="export-options">
+        <label style="font-size:11px;font-weight:600">Scene:</label>
+        <select class="select-sm" id="export-scene" style="flex:1;min-width:140px">
+          <option value="">— Pilih Scene —</option>
+        </select>
+        <label style="font-size:11px;font-weight:600">Format:</label>
+        <select class="select-sm" id="export-format">
+          <option value="png">PNG (High-Res)</option>
+          <option value="dwg">DWG (AutoCAD)</option>
+        </select>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="DrawApp.exportSingle()">💾 Export Scene</button>
+        <button class="btn" onclick="DrawApp.batchExportPNG()">🖼️ Batch Export PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drawing Register -->
+  <div class="card">
+    <div class="card-header" onclick="DrawApp.toggleCard(this)">
+      <span>📋 Drawing Register</span>
+      <span id="reg-count" class="badge">0 gambar</span>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div style="padding:8px 10px;border-bottom:1px solid var(--border);display:flex;gap:6px">
+        <button class="btn btn-sm" onclick="DrawApp.populateRegister()">↺ Sync dari Sheet Config</button>
+        <button class="btn btn-sm" onclick="DrawApp.showAddDrawingDialog()">+ Tambah</button>
+      </div>
+      <div style="overflow-x:auto;max-height:300px;overflow-y:auto">
+        <table class="register-table">
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Disiplin</th>
+              <th>Judul Gambar</th>
+              <th>Skala</th>
+              <th>Rev</th>
+              <th>Status</th>
+              <th>Update</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="register-tbody">
+            <tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3)">
+              Klik "Sync dari Sheet Config" untuk mengisi register
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Add Drawing Dialog (inline modal) -->
+<div id="add-drawing-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--bg);border-radius:var(--radius);padding:20px;width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.3)">
+    <h3 style="font-size:14px;margin-bottom:14px">Tambah Gambar Baru</h3>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;margin-bottom:10px">
+      Judul Gambar
+      <input class="field-input" id="add-title" placeholder="e.g. Denah Lantai 1">
+    </label>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;margin-bottom:10px">
+      Disiplin
+      <select class="select-sm" id="add-disc" style="width:100%">
+        <option value="architecture">Arsitektur</option>
+        <option value="structure">Struktur</option>
+        <option value="mep">MEP</option>
+        <option value="civil">Sipil</option>
+      </select>
+    </label>
+    <label style="display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:600;margin-bottom:14px">
+      Skala
+      <select class="select-sm" id="add-scale" style="width:100%">
+        <option value="1:50">1:50</option>
+        <option value="1:100" selected>1:100</option>
+        <option value="1:200">1:200</option>
+        <option value="1:500">1:500</option>
+      </select>
+    </label>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-sm" onclick="DrawApp.closeAddDialog()">Batal</button>
+      <button class="btn btn-primary btn-sm" onclick="DrawApp.submitAddDrawing()">Tambah</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// DrawApp — Fase 3 JavaScript controller
+// ================================================================
+const DrawApp = (() => {
+
+  let _scenes      = [];   // { id, name, description, type }
+  let _existingScenes = [];
+  let _selected    = new Set();
+  let _register    = [];
+
+  const SCENE_ICONS = {
+    floor_plan:     '📐',
+    roof_plan:      '🏠',
+    elevation:      '🏢',
+    section:        '✂️',
+    perspective_3d: '🎲'
+  };
+
+  // ---- Initialization -----------------------------------------------
+  function init() {
+    ruby('getSceneList');
+    ruby('getDrawingRegister');
+  }
+
+  // ---- Scene List ---------------------------------------------------
+  function onSceneList(data) {
+    _scenes         = data.definitions || [];
+    _existingScenes = data.existing    || [];
+    _renderSceneGrid();
+    _updateSceneDropdown();
+  }
+
+  function _renderSceneGrid() {
+    const grid = qs('#scene-grid');
+    const existCount = _existingScenes.length;
+    qs('#scene-exists-count').textContent = `${existCount} dibuat`;
+
+    grid.innerHTML = _scenes.map(s => {
+      const exists = _existingScenes.includes(s.name);
+      const icon   = SCENE_ICONS[s.type] || '📄';
+      const cls    = exists ? 'scene-card exists' : 'scene-card';
+      return `<div class="${cls}" data-id="${s.id}" onclick="DrawApp.toggleScene('${s.id}')">
+        <span class="scene-check">✓</span>
+        <span class="scene-icon">${icon}</span>
+        <div class="scene-title">${esc(s.description || s.name)}</div>
+        <div class="scene-sub">${esc(s.type?.replace('_',' ') || '')}</div>
+      </div>`;
+    }).join('');
+
+    // Update dropdown
+    _updateSceneDropdown();
+  }
+
+  function _updateSceneDropdown() {
+    const sel = qs('#export-scene');
+    if (!sel) return;
+    const all = [..._scenes.filter(s => _existingScenes.includes(s.name)),
+                 ..._existingScenes.filter(n => !_scenes.find(s => s.name === n)).map(n => ({name:n, description:n}))];
+    sel.innerHTML = '<option value="">— Pilih Scene —</option>' +
+      all.map(s => `<option value="${esc(s.name)}">${esc(s.description || s.name)}</option>`).join('');
+  }
+
+  function toggleScene(id) {
+    if (_selected.has(id)) _selected.delete(id);
+    else _selected.add(id);
+    const card = document.querySelector(`[data-id="${id}"]`);
+    if (card) card.classList.toggle('selected', _selected.has(id));
+  }
+
+  // ---- Scene creation -----------------------------------------------
+  function createAllScenes() {
+    spinner('scene-spinner', true);
+    ruby('createScenes', null);
+  }
+
+  function createSelectedScenes() {
+    if (_selected.size === 0) { App.toast('Pilih scene terlebih dahulu'); return; }
+    spinner('scene-spinner', true);
+    ruby('createScenes', Array.from(_selected));
+  }
+
+  function deleteScenes() {
+    if (!confirm('Hapus semua scene RAB Pro dari model ini?')) return;
+    ruby('deleteRABScenes');
+  }
+
+  function onScenesCreated(data) {
+    spinner('scene-spinner', false);
+    App.toast(`${data.count} scene berhasil dibuat ✓`);
+    ruby('getSceneList');  // refresh
+  }
+
+  function onScenesDeleted() {
+    App.toast('Scene RAB dihapus');
+    ruby('getSceneList');
+  }
+
+  // ---- Dimensioning -------------------------------------------------
+  function autoDimension() {
+    spinner('dim-spinner', true);
+    ruby('autoDimension');
+  }
+
+  function onAutoDimensionComplete(data) {
+    spinner('dim-spinner', false);
+    App.toast(`Auto-dimensioning selesai: ${data.count} anotasi ditambahkan ✓`);
+  }
+
+  // ---- Generate drawings --------------------------------------------
+  function generateDrawings() {
+    spinner('gen-spinner', true);
+    const paper = val('paper-size');
+    const filter = val('sheet-filter');
+    ruby('generateDrawings', { paper_size: paper, sheet_filter: filter });
+  }
+
+  function onDrawingsGenerated(data) {
+    spinner('gen-spinner', false);
+    if (data.success) {
+      App.toast(`Drawing set berhasil dibuat ✓`);
+      if (data.message) setTimeout(() => alert(data.message), 500);
+    } else {
+      App.toast(`Error: ${data.error || 'Gagal generate gambar'}`, 4000);
+    }
+  }
+
+  // ---- Export single ------------------------------------------------
+  function exportSingle() {
+    const scene  = val('export-scene');
+    const format = val('export-format');
+    if (!scene) { App.toast('Pilih scene terlebih dahulu'); return; }
+
+    if (format === 'png') ruby('exportScenePNG', { scene });
+    else ruby('exportDWG');
+  }
+
+  function batchExportPNG() {
+    App.toast('Batch export PNG dimulai...');
+    ruby('batchExport', { format: 'png' });
+  }
+
+  function onBatchExportComplete(data) {
+    const ok = (data.results || []).filter(r => r.success).length;
+    App.toast(`Batch export selesai: ${ok} file berhasil ✓`);
+  }
+
+  function onExportComplete(data) {
+    App.toast(`Export ${(data.format || '').toUpperCase()} berhasil ✓`);
+  }
+
+  // ---- Drawing register --------------------------------------------
+  function onDrawingRegister(data) {
+    _register = data.drawings || [];
+    qs('#reg-count').textContent = `${_register.length} gambar`;
+    _renderRegister();
+  }
+
+  function _renderRegister() {
+    const tbody = qs('#register-tbody');
+    if (!_register.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text3)">
+        Belum ada drawing. Klik "Sync" atau "Tambah".
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = _register.map(d => {
+      const statusCls = 'status-' + (d.status || '').toLowerCase().replace(/\s+/g,'_');
+      const statusLabel = d.status || '—';
+      return `<tr>
+        <td style="font-family:monospace;font-weight:600">${esc(d.drawing_no)}</td>
+        <td>${esc(d.discipline)}</td>
+        <td>${esc(d.title)}</td>
+        <td style="text-align:center">${esc(d.scale || '—')}</td>
+        <td style="text-align:center;font-weight:bold">${esc(d.revision)}</td>
+        <td><span class="status-badge ${statusCls}">${esc(statusLabel)}</span></td>
+        <td style="color:var(--text3);font-size:10px">${esc(d.updated_at?.slice(0,10) || '—')}</td>
+        <td>
+          <button class="btn btn-sm" style="padding:2px 6px;font-size:10px"
+            onclick="DrawApp.issueRevision('${esc(d.drawing_no)}')">Rev</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function populateRegister() {
+    ruby('addDrawing', { populate_from_config: true });
+    setTimeout(() => ruby('getDrawingRegister'), 500);
+  }
+
+  function showAddDrawingDialog() {
+    const modal = qs('#add-drawing-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeAddDialog() {
+    const modal = qs('#add-drawing-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function submitAddDrawing() {
+    ruby('addDrawing', {
+      title:      val('add-title'),
+      discipline: val('add-disc'),
+      scale:      val('add-scale'),
+    });
+    closeAddDialog();
+    setTimeout(() => ruby('getDrawingRegister'), 300);
+  }
+
+  function onDrawingAdded(data) {
+    App.toast(`Gambar ${data.drawing_no} ditambahkan ✓`);
+    ruby('getDrawingRegister');
+  }
+
+  function issueRevision(drawingNo) {
+    const desc = prompt(`Deskripsi revisi untuk ${drawingNo}:`);
+    if (!desc) return;
+    ruby('issueRevision', {
+      drawing_no:  drawingNo,
+      description: desc,
+      issued_by:   'RAB Pro',
+      status:      'issued_for_review'
+    });
+  }
+
+  function onRevisionIssued(data) {
+    App.toast(`Revisi ${data.revision} diterbitkan untuk ${data.drawing_no} ✓`);
+    ruby('getDrawingRegister');
+  }
+
+  function onStatusUpdated() {
+    ruby('getDrawingRegister');
+  }
+
+  function toggleCard(header) {
+    const body = header.nextElementSibling;
+    if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+  }
+
+  // ---- Utilities ---------------------------------------------------
+  function ruby(action, payload) {
+    if (typeof sketchup !== 'undefined') sketchup[action] && sketchup[action](payload || {});
+  }
+  function qs(sel) { return document.querySelector(sel); }
+  function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function spinner(id, show) { const el = document.getElementById(id); if(el) el.style.display = show ? 'inline-block' : 'none'; }
+
+  return {
+    init, toggleScene, toggleCard,
+    createAllScenes, createSelectedScenes, deleteScenes,
+    autoDimension,
+    generateDrawings, exportSingle, batchExportPNG,
+    populateRegister, showAddDrawingDialog, closeAddDialog, submitAddDrawing,
+    issueRevision,
+    // Event handlers
+    onSceneList, onScenesCreated, onScenesDeleted,
+    onAutoDimensionComplete, onDrawingsGenerated,
+    onBatchExportComplete, onExportComplete,
+    onDrawingRegister, onDrawingAdded, onRevisionIssued, onStatusUpdated
+  };
+
+})();
+
+// Hook Fase 3 events into main panel dispatcher
+;(function() {
+  const orig = window.RABPro?.onRubyEvent;
+  if (!window.RABPro) return;
+  const fase3 = {
+    onSceneList:            DrawApp.onSceneList,
+    onScenesCreated:        DrawApp.onScenesCreated,
+    onScenesDeleted:        DrawApp.onScenesDeleted,
+    onSceneCreated:         (d) => { App.toast(`Scene ${d.name} dibuat ✓`); DrawApp.init(); },
+    onAutoDimensionComplete: DrawApp.onAutoDimensionComplete,
+    onDrawingsGenerated:    DrawApp.onDrawingsGenerated,
+    onBatchExportComplete:  DrawApp.onBatchExportComplete,
+    onDrawingRegister:      DrawApp.onDrawingRegister,
+    onDrawingAdded:         DrawApp.onDrawingAdded,
+    onRevisionIssued:       DrawApp.onRevisionIssued,
+    onStatusUpdated:        DrawApp.onStatusUpdated,
+  };
+  window.RABPro.onRubyEvent = function(event, data) {
+    if (fase3[event]) fase3[event](data);
+    else if (orig) orig(event, data);
+  };
+})();
+
+// Init on load
+setTimeout(() => DrawApp.init(), 400);
+</script>
+</div>
+
+  <!-- ---- AI CHAT PANEL ------------------------------------------- -->
+  <div id="panel-ai" class="panel">
+<!-- ================================================================
+     RAB Pro — Fase 4 HTML
+     AI Chat full panel + Dashboard + Templates + Cloud Sync
+================================================================ -->
+
+<style>
+/* ---- Fase 4 specific styles ------------------------------- */
+.chat-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 260px;
+  max-height: 400px;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 90%;
+}
+
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.ai   { align-self: flex-start; align-items: flex-start; }
+.msg.system { align-self: center; align-items: center; }
+
+.msg-bubble {
+  padding: 9px 13px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.user   .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
+.msg.ai     .msg-bubble { background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+.msg.system .msg-bubble { background: var(--bg3); color: var(--text3); font-size: 11px; font-style: italic; }
+
+.msg-meta {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
+.chat-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.chat-textarea {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  min-height: 38px;
+  max-height: 100px;
+}
+
+.chat-textarea:focus { border-color: var(--accent); }
+
+.typing-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--text3);
+  border-radius: 50%;
+  animation: typing 1s infinite;
+  margin: 0 1px;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing { 0%,80%,100%{transform:scale(0.8);opacity:.5} 40%{transform:scale(1.1);opacity:1} }
+
+/* ---- Dashboard ------------------------------------------- */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kpi-cell {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.kpi-val   { font-size: 16px; font-weight: 700; color: var(--accent); line-height: 1; }
+.kpi-label { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.progress-name { flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progress-bar-wrap { flex: 3; }
+.progress-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.progress-pct { flex: 0 0 35px; text-align: right; font-weight: 600; font-size: 11px; }
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.ms-icon { font-size: 14px; flex-shrink: 0; }
+.ms-name { flex: 2; }
+.ms-date { flex: 1; color: var(--text3); font-size: 10px; }
+.ms-status { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+.ms-pending   { background: var(--bg3); color: var(--text3); }
+.ms-completed { background: #e8f5e9; color: #2e7d32; }
+.ms-delayed   { background: #fdecea; color: #c62828; }
+
+@media (prefers-color-scheme:dark) {
+  .ms-completed { background: #1b3a1e; color: #81c784; }
+  .ms-delayed   { background: #3c1010; color: #ef9a9a; }
+}
+
+/* ---- Templates ------------------------------------------- */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.tmpl-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tmpl-card:hover { border-color: var(--accent); background: var(--accent-bg); }
+.tmpl-icon  { font-size: 26px; margin-bottom: 5px; }
+.tmpl-name  { font-size: 11px; font-weight: 600; color: var(--text); }
+.tmpl-area  { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* ---- Sync ------------------------------------------------ */
+.snapshot-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.snap-label { flex: 2; font-weight: 500; }
+.snap-date  { flex: 1; color: var(--text3); font-size: 10px; }
+.snap-val   { flex: 1; text-align: right; color: var(--accent); font-weight: 600; }
+
+.comment-item {
+  background: var(--bg2);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.cmt-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.cmt-author { font-weight: 600; }
+.cmt-date   { color: var(--text3); font-size: 10px; }
+.cmt-text   { line-height: 1.5; }
+.cmt-resolved { opacity: 0.5; }
+</style>
+
+<!-- ============================================================
+     AI CHAT PANEL (full Fase 4 version)
+============================================================ -->
+<div id="ai-full-content">
+
+  <!-- Context indicator -->
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-header" onclick="AIApp.toggleCard(this)">
+      <span>🧠 Konteks AI</span>
+      <span id="ai-context-label" class="badge">—</span>
+    </div>
+    <div class="card-body" style="display:none">
+      <pre id="ai-context-pre" style="font-size:10px;color:var(--text2);white-space:pre-wrap;line-height:1.5;max-height:120px;overflow-y:auto"></pre>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-sm" onclick="AIApp.refreshContext()">↺ Refresh Konteks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat toolbar -->
+  <div class="chat-toolbar">
+    <button class="btn btn-sm" onclick="AIApp.sendQuick('Analisis model ini dan berikan overview singkat')">📊 Analisis Model</button>
+    <button class="btn btn-sm" onclick="AIApp.sendQuick('Berikan saran value engineering untuk proyek ini')">💡 Value Engineering</button>
+    <button class="btn btn-sm" onclick="AIApp.sendQuick('Apakah ada anomali atau ketidakwajaran dalam data RAB?')">🔍 Cek Anomali</button>
+    <button class="btn btn-sm" onclick="AIApp.clearChat()">🗑️ Reset</button>
+  </div>
+
+  <!-- Chat log -->
+  <div class="chat-log" id="ai-chat-log">
+    <div class="msg ai">
+      <div class="msg-bubble">Halo! Saya RAB Pro AI, siap membantu analisis model, estimasi biaya, dan konsultasi konstruksi. Model SketchUp aktif terhubung sebagai konteks saya. Apa yang bisa saya bantu?</div>
+    </div>
+  </div>
+
+  <!-- Input row -->
+  <div class="chat-input-row">
+    <textarea class="chat-textarea" id="ai-input" rows="1"
+      placeholder="Tanya tentang model, biaya, desain, material..."
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();AIApp.send()}"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+    <button class="btn btn-primary btn-sm" onclick="AIApp.send()" id="ai-send-btn">Kirim</button>
+  </div>
+
+  <!-- API Key setup -->
+  <div class="card" style="margin-top:10px" id="api-key-card">
+    <div class="card-header" onclick="AIApp.toggleCard(this)">
+      <span>🔑 API Key (Claude)</span>
+      <span id="api-key-status" class="badge">Belum diset</span>
+    </div>
+    <div class="card-body" style="display:none">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input type="password" id="api-key-input" class="field-input" style="flex:1" placeholder="sk-ant-api...">
+        <button class="btn btn-sm" onclick="AIApp.saveKey()">Simpan</button>
+        <button class="btn btn-sm" onclick="AIApp.testKey()">Test</button>
+      </div>
+      <p style="font-size:10px;color:var(--text3)">Dapatkan API key di <a href="#" onclick="sketchup&&sketchup.openURL('https://console.anthropic.com')" style="color:var(--accent)">console.anthropic.com</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD PANEL
+============================================================ -->
+<div id="dashboard-content" style="display:none">
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip" id="dash-kpi">
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-budget">—</div><div class="kpi-label">Total RAB</div></div>
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-actual">—</div><div class="kpi-label">Aktual</div></div>
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-remaining">—</div><div class="kpi-label">Sisa</div></div>
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-progress">—</div><div class="kpi-label">Progress</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="DashApp.refresh()">
+      <span id="dash-spinner" class="spinner" style="display:none"></span>
+      ↺ Refresh Dashboard
+    </button>
+    <button class="btn btn-sm" onclick="DashApp.initProgress()">Inisialisasi dari RAB</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="card">
+    <div class="card-header" onclick="DashApp.toggleCard(this)">
+      <span>📈 Progress per Pekerjaan</span>
+    </div>
+    <div class="card-body" id="progress-list">
+      <div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Belum ada data</div><div class="empty-desc">Klik "Inisialisasi dari RAB" terlebih dahulu</div></div>
+    </div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="card">
+    <div class="card-header" onclick="DashApp.toggleCard(this)">
+      <span>📅 Milestone Proyek</span>
+    </div>
+    <div class="card-body" id="milestone-list" style="padding:0">
+      <div style="padding:10px;color:var(--text3);font-size:11px;text-align:center">Belum ada milestone</div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div id="alert-list"></div>
+</div>
+
+<!-- ============================================================
+     TEMPLATES PANEL
+============================================================ -->
+<div id="templates-content" style="display:none">
+
+  <p style="font-size:11px;color:var(--text2);margin-bottom:10px">
+    Pilih template proyek untuk setup otomatis layer, scene, dan milestone.
+  </p>
+
+  <div class="template-grid" id="template-grid">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Template preview -->
+  <div class="card" id="tmpl-preview-card" style="display:none;margin-top:10px">
+    <div class="card-header" style="cursor:default">
+      <span id="tmpl-preview-title">—</span>
+      <button class="btn btn-primary btn-sm" id="tmpl-apply-btn" onclick="TmplApp.apply()">✦ Terapkan Template</button>
+    </div>
+    <div class="card-body" id="tmpl-preview-body"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CLOUD SYNC PANEL
+============================================================ -->
+<div id="sync-content" style="display:none">
+
+  <!-- Export / Import -->
+  <div class="card">
+    <div class="card-header" onclick="SyncApp.toggleCard(this)">
+      <span>💾 Export & Import Proyek</span>
+    </div>
+    <div class="card-body">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="SyncApp.exportJSON()">📤 Export JSON</button>
+        <button class="btn" onclick="SyncApp.importJSON()">📥 Import JSON</button>
+        <button class="btn" onclick="SyncApp.generateReport()">🌐 Laporan HTML</button>
+      </div>
+      <p style="font-size:10px;color:var(--text3);margin-top:6px">
+        JSON berisi semua data proyek: RAB, tag, progress, gambar register. Bisa dibagikan ke tim atau klien.
+      </p>
+    </div>
+  </div>
+
+  <!-- Snapshots -->
+  <div class="card">
+    <div class="card-header" onclick="SyncApp.toggleCard(this)">
+      <span>📸 Riwayat Versi (Snapshots)</span>
+      <button class="btn btn-sm" onclick="SyncApp.createSnapshot()">+ Simpan Versi</button>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="snapshot-list">
+        <div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Belum ada snapshot</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comments -->
+  <div class="card">
+    <div class="card-header" onclick="SyncApp.toggleCard(this)">
+      <span>💬 Komentar & Review</span>
+      <span id="cmt-count" class="badge">0</span>
+    </div>
+    <div class="card-body">
+      <div class="chat-input-row" style="margin-bottom:10px">
+        <input class="chat-textarea" id="cmt-input" type="text" style="border-radius:var(--radius-sm);padding:6px 10px"
+               placeholder="Tambah komentar...">
+        <button class="btn btn-sm" onclick="SyncApp.addComment()">Kirim</button>
+      </div>
+      <div id="comment-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// AIApp — AI Chat Fase 4
+// ================================================================
+const AIApp = (() => {
+
+  let _typing = false;
+  let _symbol = 'BND$';
+
+  function init() {
+    ruby('getChatHistory');
+    ruby('getAIContext');
+  }
+
+  function send() {
+    const input = qs('#ai-input');
+    const msg   = input.value.trim();
+    if (!msg || _typing) return;
+
+    _appendMsg('user', msg);
+    input.value = '';
+    input.style.height = 'auto';
+
+    _setTyping(true);
+    ruby('aiChat', { message: msg, include_model: true });
+  }
+
+  function sendQuick(msg) {
+    qs('#ai-input').value = msg;
+    send();
+  }
+
+  function onAIChatResponse(data) {
+    _removeTyping();
+    _setTyping(false);
+    if (data.success) {
+      _appendMsg('ai', data.content, data.tokens_used);
+    } else {
+      _appendMsg('system', data.content || 'Error');
+    }
+  }
+
+  function onChatHistory(data) {
+    const log = qs('#ai-chat-log');
+    const msgs = data.messages || [];
+    if (msgs.length > 1) {
+      log.innerHTML = '';
+      msgs.forEach(m => _appendMsg(m.role, m.content));
+    }
+  }
+
+  function onAIContext(data) {
+    const label = qs('#ai-context-label');
+    if (label) label.textContent = `${data.history_count || 0} pesan`;
+    const pre = qs('#ai-context-pre');
+    if (pre) pre.textContent = data.summary || '—';
+  }
+
+  function refreshContext() {
+    ruby('getAIContext');
+    App.toast('Konteks diperbarui');
+  }
+
+  function clearChat() {
+    ruby('clearChatHistory');
+    const log = qs('#ai-chat-log');
+    log.innerHTML = '';
+    _appendMsg('system', 'Riwayat percakapan dihapus. Mulai percakapan baru.');
+  }
+
+  function onChatHistoryCleared() { App.toast('Chat direset ✓'); }
+
+  function saveKey() {
+    const key = qs('#api-key-input')?.value?.trim();
+    if (!key) { App.toast('Masukkan API key terlebih dahulu'); return; }
+    ruby('saveApiKey', key);
+  }
+
+  function testKey() {
+    App.toast('Menguji koneksi API...');
+    ruby('testApiKey');
+  }
+
+  function onApiKeySaved() { App.toast('API key disimpan ✓'); }
+
+  function onApiKeyTest(data) {
+    App.toast(data.message);
+    const status = qs('#api-key-status');
+    if (status) {
+      status.textContent = data.ok ? '✓ Terhubung' : '✗ Gagal';
+      status.style.color = data.ok ? 'var(--accent)' : '#c62828';
+    }
+  }
+
+  function _appendMsg(role, text, tokens) {
+    const log = qs('#ai-chat-log');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = text;
+    div.appendChild(bubble);
+
+    if (tokens) {
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = `${tokens} tokens`;
+      div.appendChild(meta);
+    }
+
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function _setTyping(on) {
+    _typing = on;
+    const btn = qs('#ai-send-btn');
+    if (btn) btn.disabled = on;
+
+    if (on) {
+      const div = document.createElement('div');
+      div.className = 'msg ai';
+      div.id = 'typing-indicator';
+      div.innerHTML = `<div class="msg-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+      qs('#ai-chat-log').appendChild(div);
+      qs('#ai-chat-log').scrollTop = qs('#ai-chat-log').scrollHeight;
+    }
+  }
+
+  function _removeTyping() {
+    const el = qs('#typing-indicator');
+    if (el) el.remove();
+  }
+
+  function toggleCard(h) { const b = h.nextElementSibling; if(b) b.style.display = b.style.display==='none'?'':'none'; }
+
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+  function qs(s) { return document.querySelector(s); }
+
+  return { init, send, sendQuick, clearChat, saveKey, testKey, toggleCard, refreshContext,
+           onAIChatResponse, onChatHistory, onAIContext, onApiKeySaved, onApiKeyTest };
+})();
+
+// ================================================================
+// DashApp — Dashboard Fase 4
+// ================================================================
+const DashApp = (() => {
+
+  let _sym = 'BND$';
+
+  function init() { refresh(); }
+
+  function refresh() {
+    spinner('dash-spinner', true);
+    ruby('getDashboard');
+  }
+
+  function initProgress() {
+    ruby('initProgress');
+    App.toast('Inisialisasi progress dari RAB...');
+    setTimeout(() => refresh(), 800);
+  }
+
+  function onDashboard(data) {
+    spinner('dash-spinner', false);
+
+    // KPIs
+    setT('#kpi-budget',    fmtCur(data.budget_total));
+    setT('#kpi-actual',    fmtCur(data.actual_total));
+    setT('#kpi-remaining', fmtCur(data.remaining));
+    setT('#kpi-progress',  (data.overall_pct || 0) + '%');
+
+    // Progress list
+    const prog = data.progress || [];
+    const progEl = qs('#progress-list');
+    if (prog.length) {
+      progEl.innerHTML = prog.map(p => {
+        const pct   = p.pct_complete || 0;
+        const color = pct >= 100 ? '#2e7d32' : pct >= 50 ? '#0071e3' : '#ff9800';
+        return `<div class="progress-row">
+          <div class="progress-name" title="${esc(p.category_name)}">${esc(p.category_name)}</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+          </div>
+          <div class="progress-pct" style="color:${color}">${pct}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Milestones
+    const ms = data.milestones || [];
+    const msEl = qs('#milestone-list');
+    if (ms.length) {
+      msEl.innerHTML = ms.map(m => {
+        const icon = m.status === 'completed' ? '✅' : m.status === 'delayed' ? '⚠️' : '⏳';
+        const cls  = m.status === 'completed' ? 'ms-completed' : m.status === 'delayed' ? 'ms-delayed' : 'ms-pending';
+        return `<div class="milestone-item">
+          <span class="ms-icon">${icon}</span>
+          <span class="ms-name">${esc(m.name)}</span>
+          <span class="ms-date">${esc(m.planned_date || '—')}</span>
+          <span class="ms-status ${cls}">${esc(m.status)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Alerts
+    const alerts = data.alerts || [];
+    const alertEl = qs('#alert-list');
+    if (alertEl) {
+      alertEl.innerHTML = alerts.map(a => {
+        const bg = a.level === 'danger' ? '#fdecea' : a.level === 'warning' ? '#fff8e1' : '#e3f2fd';
+        const tc = a.level === 'danger' ? '#c62828' : a.level === 'warning' ? '#e65100' : '#0d47a1';
+        return `<div style="background:${bg};color:${tc};padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:11px">
+          ${a.icon} <strong>${esc(a.title)}</strong> — ${esc(a.message)}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function onProgressInitialized() { App.toast('Progress diinisialisasi ✓'); refresh(); }
+
+  function toggleCard(h) { const b = h.nextElementSibling; if(b) b.style.display = b.style.display==='none'?'':'none'; }
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+  function qs(s) { return document.querySelector(s); }
+  function setT(sel, t) { const el = qs(sel); if(el) el.textContent = t; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function spinner(id, on) { const el = document.getElementById(id); if(el) el.style.display = on?'inline-block':'none'; }
+  function fmtCur(n) { return 'BND$ ' + parseFloat(n||0).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  return { init, refresh, initProgress, toggleCard, onDashboard, onProgressInitialized };
+})();
+
+// ================================================================
+// TmplApp — Templates Fase 4
+// ================================================================
+const TmplApp = (() => {
+
+  let _selectedId = null;
+
+  function init() { ruby('getTemplates'); }
+
+  function onTemplates(data) {
+    const grid = qs('#template-grid');
+    grid.innerHTML = (data.templates || []).map(t =>
+      `<div class="tmpl-card" onclick="TmplApp.preview('${t.id}')">
+        <div class="tmpl-icon">${t.icon}</div>
+        <div class="tmpl-name">${esc(t.name)}</div>
+        <div class="tmpl-area">${t.typical_area_m2} m²</div>
+      </div>`
+    ).join('');
+  }
+
+  function preview(id) {
+    _selectedId = id;
+    ruby('previewTemplate', id);
+  }
+
+  function onTemplatePreview(t) {
+    qs('#tmpl-preview-card').style.display = 'block';
+    qs('#tmpl-preview-title').textContent = t.name;
+
+    qs('#tmpl-preview-body').innerHTML = `
+      <p style="font-size:11px;margin-bottom:10px">${esc(t.description)}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;font-size:11px">
+        <div><strong>${t.layer_count}</strong><br><span style="color:var(--text3)">Layer</span></div>
+        <div><strong>${t.category_count}</strong><br><span style="color:var(--text3)">Kategori RAB</span></div>
+        <div><strong>${t.scene_count}</strong><br><span style="color:var(--text3)">Scene</span></div>
+      </div>
+      <p style="font-size:10px;color:var(--text3);font-style:italic">${esc(t.notes || '')}</p>
+    `;
+  }
+
+  function apply() {
+    if (!_selectedId) return;
+    if (!confirm(`Terapkan template "${_selectedId}" ke model aktif?\n\nIni akan membuat layer, scene, dan milestone baru.`)) return;
+    ruby('applyTemplate', _selectedId);
+    App.toast('Menerapkan template...');
+  }
+
+  function onTemplateApplied(data) {
+    if (data.success) {
+      App.toast(`Template "${data.template}" berhasil diterapkan ✓`);
+    } else {
+      App.toast(`Error: ${data.error}`, 4000);
+    }
+  }
+
+  function qs(s) { return document.querySelector(s); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+
+  return { init, preview, apply, onTemplates, onTemplatePreview, onTemplateApplied };
+})();
+
+// ================================================================
+// SyncApp — Cloud Sync Fase 4
+// ================================================================
+const SyncApp = (() => {
+
+  function init() {
+    ruby('getSnapshots');
+    ruby('getComments');
+  }
+
+  function exportJSON()  { ruby('exportJSON'); }
+  function importJSON()  { ruby('importJSON'); }
+  function generateReport() { ruby('generateShareReport'); }
+
+  function createSnapshot() {
+    const label = prompt('Label untuk snapshot ini:', `Versi ${new Date().toLocaleDateString('id-ID')}`);
+    if (!label) return;
+    ruby('createSnapshot', { label });
+  }
+
+  function onSnapshotCreated(data) {
+    App.toast(`Snapshot "${data.label}" disimpan ✓`);
+    ruby('getSnapshots');
+  }
+
+  function onSnapshots(data) {
+    const el = qs('#snapshot-list');
+    const snaps = data.snapshots || [];
+    if (!snaps.length) {
+      el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Belum ada snapshot</div>';
+      return;
+    }
+    el.innerHTML = snaps.reverse().map(s =>
+      `<div class="snapshot-item">
+        <span class="snap-label">${esc(s.label)}</span>
+        <span class="snap-date">${esc((s.created_at||'').slice(0,10))}</span>
+        <span class="snap-val">BND$ ${parseFloat(s.rab_total||0).toLocaleString('id-ID',{maximumFractionDigits:0})}</span>
+        <span class="snap-val">${s.progress_pct||0}%</span>
+      </div>`
+    ).join('');
+  }
+
+  function addComment() {
+    const input = qs('#cmt-input');
+    const text  = input?.value?.trim();
+    if (!text) return;
+    ruby('addComment', { author: 'Pengguna', text });
+    if (input) input.value = '';
+  }
+
+  function onComments(data) {
+    const cmts = data.comments || [];
+    qs('#cmt-count').textContent = cmts.length;
+
+    const el = qs('#comment-list');
+    if (!cmts.length) { el.innerHTML = ''; return; }
+
+    el.innerHTML = cmts.map(c =>
+      `<div class="comment-item ${c.resolved?'cmt-resolved':''}">
+        <div class="cmt-header">
+          <span class="cmt-author">${esc(c.author)}</span>
+          <span class="cmt-date">${esc((c.created_at||'').slice(0,10))}</span>
+        </div>
+        <div class="cmt-text">${esc(c.text)}</div>
+        ${!c.resolved ? `<button class="btn btn-sm" style="margin-top:6px;font-size:10px" onclick="SyncApp.resolve('${c.id}')">Tandai Selesai</button>` : '<em style="font-size:10px;color:var(--text3)">✓ Selesai</em>'}
+      </div>`
+    ).join('');
+  }
+
+  function resolve(id) { ruby('resolveComment', id); setTimeout(() => ruby('getComments'), 200); }
+
+  function onCommentAdded() { ruby('getComments'); }
+  function onShareReportGenerated(data) { App.toast(data.success ? 'Laporan HTML berhasil dibuat ✓' : `Error: ${data.error}`, 3000); }
+  function onImportComplete(data) { App.toast(data.success ? 'Import berhasil ✓' : `Error: ${data.error}`, 3000); }
+  function onExportComplete(data) { App.toast(data.success ? 'Export berhasil ✓' : `Error: ${data.error}`, 3000); }
+
+  function toggleCard(h) { const b = h.nextElementSibling; if(b) b.style.display = b.style.display==='none'?'':'none'; }
+  function qs(s) { return document.querySelector(s); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+
+  return { init, exportJSON, importJSON, generateReport, createSnapshot, addComment, resolve, toggleCard,
+           onSnapshotCreated, onSnapshots, onComments, onCommentAdded, onShareReportGenerated, onImportComplete, onExportComplete };
+})();
+
+// Hook Fase 4 events into dispatcher
+;(function() {
+  const orig = window.RABPro?.onRubyEvent;
+  if (!window.RABPro) return;
+  const fase4 = {
+    onAIChatResponse:      AIApp.onAIChatResponse,
+    onChatHistory:         AIApp.onChatHistory,
+    onChatHistoryCleared:  AIApp.onChatHistoryCleared,
+    onAIContext:           AIApp.onAIContext,
+    onApiKeySaved:         AIApp.onApiKeySaved,
+    onApiKeyTest:          AIApp.onApiKeyTest,
+    onCommandParsed:       (d) => console.log('Command:', d),
+    onDashboard:           DashApp.onDashboard,
+    onProgressInitialized: DashApp.onProgressInitialized,
+    onProgressUpdated:     () => DashApp.refresh(),
+    onMilestoneUpdated:    () => DashApp.refresh(),
+    onMilestonesSaved:     () => App.toast('Milestone disimpan ✓'),
+    onTemplates:           TmplApp.onTemplates,
+    onTemplatePreview:     TmplApp.onTemplatePreview,
+    onTemplateApplied:     TmplApp.onTemplateApplied,
+    onSnapshotCreated:     SyncApp.onSnapshotCreated,
+    onSnapshots:           SyncApp.onSnapshots,
+    onComments:            SyncApp.onComments,
+    onCommentAdded:        SyncApp.onCommentAdded,
+    onShareReportGenerated: SyncApp.onShareReportGenerated,
+    onImportComplete:      SyncApp.onImportComplete,
+    onExportComplete:      (d) => { SyncApp.onExportComplete(d); },
+  };
+  window.RABPro.onRubyEvent = function(e, d) {
+    if (fase4[e]) fase4[e](d);
+    else if (orig) orig(e, d);
+  };
+})();
+
+// Init all Fase 4 apps
+setTimeout(() => {
+  AIApp.init();
+  TmplApp.init();
+  SyncApp.init();
+}, 600);
+</script>
+</div>
+
+  <!-- ---- SETTINGS PANEL ------------------------------------------ -->
+  <div id="panel-settings" class="panel">
+
+    <div class="card">
+      <div class="card-header">Umum</div>
+      <div class="card-body">
+        <div class="settings-row">
+          <span>Bahasa</span>
+          <select class="settings-input" style="width:120px" id="s-language"
+                  onchange="App.saveSetting('ui_language',this.value)">
+            <option value="id">Indonesia</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span>Mata Uang</span>
+          <select class="settings-input" style="width:120px" id="s-currency"
+                  onchange="App.saveSetting('currency',this.value)">
+            <option value="BND">BND (Brunei Dollar)</option>
+            <option value="IDR">IDR (Rupiah)</option>
+            <option value="SGD">SGD</option>
+            <option value="MYR">MYR</option>
+            <option value="USD">USD</option>
+          </select>
+        </div>
+        <div class="settings-row">
+          <span>Auto-tag saat buka model</span>
+          <div class="toggle" id="t-autotag" onclick="App.toggleSetting('auto_tag_on_open', this)"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">AI Assistant</div>
+      <div class="card-body">
+        <div class="settings-row">
+          <span>Aktifkan AI</span>
+          <div class="toggle on" id="t-ai" onclick="App.toggleSetting('ai_enabled', this)"></div>
+        </div>
+        <div class="settings-group" style="margin-top:10px">
+          <label class="settings-label">Model AI</label>
+          <select class="settings-input" id="s-ai-model"
+                  onchange="App.saveSetting('ai_model',this.value)">
+            <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (Recommended)</option>
+            <option value="claude-opus-4-6">Claude Opus 4.6 (Most Powerful)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">Export</div>
+      <div class="card-body">
+        <div class="settings-group">
+          <label class="settings-label">Folder Output Default</label>
+          <input class="settings-input" type="text" id="s-export-path"
+                 placeholder="Pilih folder..."
+                 onchange="App.saveSetting('export_path',this.value)">
+        </div>
+        <div class="settings-row">
+          <span>Ukuran Kertas PDF</span>
+          <select class="settings-input" style="width:80px" id="s-paper"
+                  onchange="App.saveSetting('pdf_paper_size',this.value)">
+            <option value="A4">A4</option>
+            <option value="A3">A3</option>
+            <option value="A1">A1</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:12px;color:var(--text3);font-size:11px">
+      RAB Pro v<span id="version-label">1.0.0</span>
+    </div>
+
+  </div>
+
+</div><!-- /content -->
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<!-- =========================================================
+     APPLICATION JAVASCRIPT
+========================================================= -->
+<script>
+const App = (() => {
+
+  // State
+  let _allEntities = [];
+  let _settings    = {};
+  let _categories  = [];
+  let _groups      = {};
+
+  // ---- Ruby bridge -------------------------------------------------------
+  const ruby = (action, payload) => {
+    if (typeof sketchup !== 'undefined') {
+      sketchup.callRuby ? sketchup.callRuby(action, payload || {})
+                        : sketchup[action] && sketchup[action](payload || {});
+    } else {
+      console.log('[Ruby stub]', action, payload);
+    }
+  };
+
+  // ---- Event handler from Ruby (called by execute_script) ----------------
+  window.RABPro = {
+    onRubyEvent(event, data) {
+      switch(event) {
+        case 'onInit':          _onInit(data);          break;
+        case 'onModelChanged':  _onModelChanged(data);  break;
+        case 'onInspectResult': _onInspectResult(data); break;
+        case 'onAutoTagComplete': _onAutoTagComplete(data); break;
+        case 'onTagEntityComplete': _onTagEntityComplete(data); break;
+        case 'onCategoryLibraryLoaded': _onCategoryLibraryLoaded(data); break;
+        case 'onSettingsLoaded': _onSettingsLoaded(data); break;
+        case 'onSettingsSaved': toast('Pengaturan disimpan ✓'); break;
+        case 'onAIResponse':    _onAIResponse(data);    break;
+        case 'onError':         _onError(data);         break;
+      }
+    }
+  };
+
+  // ---- Init --------------------------------------------------------------
+  function _onInit(data) {
+    if (data.model)      _onModelChanged(data.model);
+    if (data.settings)   _onSettingsLoaded(data.settings);
+    if (data.categories) _onCategoryLibraryLoaded({ categories: data.categories });
+    if (data.version)    qs('#version-label').textContent = data.version;
+  }
+
+  function _onModelChanged(data) {
+    const summary = data.summary || data;
+    qs('#model-title').textContent = summary.title || 'Untitled';
+    qs('#stat-layers').textContent    = summary.layers || 0;
+    qs('#stat-materials').textContent = summary.materials || 0;
+    qs('#stat-defs').textContent      = summary.component_defs || 0;
+    if (data.entities) _onInspectResult(data);
+  }
+
+  // ---- Inspector ---------------------------------------------------------
+  function inspectModel() {
+    showSpinner('inspect-spinner');
+    ruby('inspectModel');
+  }
+
+  function _onInspectResult(data) {
+    hideSpinner('inspect-spinner');
+    const entities = data.entities || data || [];
+    _allEntities = entities;
+
+    // Count types
+    const comps  = entities.filter(e => e.entity_type === 'component').length;
+    const groups = entities.filter(e => e.entity_type === 'group').length;
+    const faces  = entities.filter(e => e.entity_type === 'face').length;
+
+    qs('#stat-components').textContent = comps;
+    qs('#stat-groups').textContent     = groups;
+    qs('#stat-faces').textContent      = faces;
+    qs('#entity-count-label').textContent = `${entities.length} entitas`;
+
+    _renderEntityList(entities);
+    _updateTaggedList(entities);
+
+    // Bounds
+    if (data.geometry || data.summary) {
+      qs('#bounds-card').style.display = 'block';
+    }
+  }
+
+  function filterEntities(type) {
+    if (type === 'all') { _renderEntityList(_allEntities); return; }
+    _renderEntityList(_allEntities.filter(e => e.entity_type === type));
+  }
+
+  function filterEntityList(query) {
+    if (!query) { _renderEntityList(_allEntities); return; }
+    const q = query.toLowerCase();
+    _renderEntityList(_allEntities.filter(e =>
+      (e.name || '').toLowerCase().includes(q) ||
+      (e.layer || '').toLowerCase().includes(q) ||
+      (e.rab_category || '').toLowerCase().includes(q)
+    ));
+  }
+
+  function _renderEntityList(entities) {
+    const list = qs('#entity-list');
+    if (!entities.length) {
+      list.innerHTML = '<li style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Tidak ada entitas ditemukan</li>';
+      return;
+    }
+
+    // Show max 200 items
+    const visible = entities.slice(0, 200);
+    list.innerHTML = visible.map(e => {
+      const badge = `<span class="entity-type-badge badge-${e.entity_type}">${e.entity_type === 'component' ? 'Comp' : e.entity_type === 'group' ? 'Grp' : 'Face'}</span>`;
+      const name  = e.name || `Entity #${e.entity_id}`;
+      const tag   = e.rab_category ? `<span class="entity-tag">${e.rab_category}</span>` : '';
+      return `<li class="entity-item" onclick="App.selectEntity(${e.entity_id})" ondblclick="App.zoomEntity(${e.entity_id})">
+        ${badge}
+        <span class="entity-name">${escHtml(name)}</span>
+        <span class="entity-layer">${escHtml(e.layer || '')}</span>
+        ${tag}
+      </li>`;
+    }).join('');
+
+    if (entities.length > 200) {
+      list.innerHTML += `<li style="padding:8px;text-align:center;color:var(--text3);font-size:11px">...dan ${entities.length - 200} entitas lainnya</li>`;
+    }
+  }
+
+  function selectEntity(id) { ruby('selectEntity', id); }
+  function zoomEntity(id)   { ruby('zoomToEntity', id); }
+
+  // ---- Tagger ------------------------------------------------------------
+  function autoTag() {
+    showSpinner('autotag-spinner');
+    ruby('autoTagModel');
+  }
+
+  function _onAutoTagComplete(result) {
+    hideSpinner('autotag-spinner');
+    toast(`Auto-tag selesai: ${result.tagged} entitas di-tag ✓`);
+    // Re-inspect to get updated tags
+    ruby('inspectModel');
+  }
+
+  function _onTagEntityComplete(data) {
+    toast(`Tag diperbarui ✓`);
+    ruby('inspectModel');
+  }
+
+  function _updateTaggedList(entities) {
+    const tagged = entities.filter(e => e.rab_category);
+    qs('#tagged-count').textContent = tagged.length;
+
+    const list = qs('#tagged-list');
+    if (!tagged.length) {
+      list.innerHTML = `<div class="empty">
+        <div class="empty-icon">🏷️</div>
+        <div class="empty-title">Belum ada tag</div>
+        <div class="empty-desc">Klik Auto-tag untuk mendeteksi<br>kategori pekerjaan secara otomatis</div>
+      </div>`;
+      return;
+    }
+
+    list.innerHTML = tagged.map(e => {
+      const cat = _categories.find(c => c.id === e.rab_category);
+      const catName = cat ? cat.name : e.rab_category;
+      return `<li class="entity-item" onclick="App.selectEntity(${e.entity_id})">
+        <span class="entity-name">${escHtml(e.name || `Entity #${e.entity_id}`)}</span>
+        <span class="entity-tag">${escHtml(catName)}</span>
+      </li>`;
+    }).join('');
+  }
+
+  function clearAllTags() {
+    if (!confirm('Hapus semua tag RAB Pro dari model ini?')) return;
+    toast('Fitur ini akan tersedia sepenuhnya di Fase 2');
+  }
+
+  // ---- Category library --------------------------------------------------
+  function _onCategoryLibraryLoaded(data) {
+    _categories = data.categories || [];
+    _groups     = data.groups || {};
+    _renderCategoryList(_categories);
+  }
+
+  function _renderCategoryList(cats) {
+    const container = qs('#category-list');
+    if (!cats.length) { container.innerHTML = ''; return; }
+
+    // Group by group field
+    const grouped = {};
+    cats.forEach(c => {
+      const g = c.group || 'lain';
+      if (!grouped[g]) grouped[g] = [];
+      grouped[g].push(c);
+    });
+
+    container.innerHTML = Object.entries(grouped).map(([g, items]) => {
+      const groupLabel = (items[0] && items[0].group_label) || g;
+      const rows = items.map(c =>
+        `<div class="cat-item" onclick="App.selectCategory('${c.id}')">
+          <span class="cat-code">${c.code}</span>
+          <span class="cat-name">${escHtml(c.name)}</span>
+          <span class="cat-unit">${c.unit}</span>
+        </div>`
+      ).join('');
+      return `<div class="cat-group-header">${escHtml(groupLabel)}</div>${rows}`;
+    }).join('');
+  }
+
+  function filterCategories(q) {
+    if (!q) { _renderCategoryList(_categories); return; }
+    const ql = q.toLowerCase();
+    _renderCategoryList(_categories.filter(c =>
+      c.name.toLowerCase().includes(ql) ||
+      c.code.toLowerCase().includes(ql) ||
+      (c.name_en || '').toLowerCase().includes(ql)
+    ));
+  }
+
+  function selectCategory(catId) {
+    // If an entity is selected in SketchUp, tag it with this category
+    toast(`Kategori dipilih: ${catId} — pilih entitas di model untuk men-tag`);
+  }
+
+  // ---- Settings ----------------------------------------------------------
+  function _onSettingsLoaded(s) {
+    _settings = s;
+    // Apply to form
+    setVal('#s-language',   s.ui_language);
+    setVal('#s-currency',   s.currency);
+    setVal('#s-ai-model',   s.ai_model);
+    setVal('#s-export-path', s.export_path);
+    setVal('#s-paper',      s.pdf_paper_size);
+    setToggle('#t-autotag', s.auto_tag_on_open);
+    setToggle('#t-ai',      s.ai_enabled);
+  }
+
+  function saveSetting(key, value) {
+    _settings[key] = value;
+    ruby('saveSettings', _settings);
+  }
+
+  function toggleSetting(key, el) {
+    el.classList.toggle('on');
+    saveSetting(key, el.classList.contains('on'));
+  }
+
+  // ---- AI Chat -----------------------------------------------------------
+  function sendChat() {
+    const input = qs('#chat-input');
+    const msg   = input.value.trim();
+    if (!msg) return;
+
+    _appendChatMsg('user', msg);
+    input.value = '';
+
+    // Show typing indicator
+    _appendChatMsg('ai', '...', 'typing-indicator');
+
+    ruby('sendAIMessage', { message: msg, model_context: _allEntities.length });
+  }
+
+  function _onAIResponse(data) {
+    // Remove typing indicator
+    const typing = qs('#typing-indicator');
+    if (typing) typing.remove();
+
+    _appendChatMsg('ai', data.content);
+  }
+
+  function _appendChatMsg(role, text, id) {
+    const msgs = qs('#chat-messages');
+    const div  = document.createElement('div');
+    div.className = `msg-bubble ${role}`;
+    div.textContent = text;
+    if (id) div.id = id;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  // ---- Navigation --------------------------------------------------------
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === `panel-${name}`));
+  }
+
+  function toggleCard(header) {
+    const body = header.nextElementSibling;
+    if (body) body.style.display = body.style.display === 'none' ? '' : 'none';
+  }
+
+  function refreshModel() {
+    ruby('inspectModel');
+    toast('Memperbarui data model...');
+  }
+
+  // ---- Toast -------------------------------------------------------------
+  function toast(msg, duration = 2500) {
+    const el = qs('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('show'), duration);
+  }
+
+  // ---- Error handler -----------------------------------------------------
+  function _onError(data) {
+    hideSpinner('inspect-spinner');
+    hideSpinner('autotag-spinner');
+    toast(`Error: ${data.message}`, 4000);
+    console.error('[RABPro]', data.source, data.message);
+  }
+
+  // ---- DOM helpers -------------------------------------------------------
+  function qs(sel) { return document.querySelector(sel); }
+
+  function setVal(sel, val) {
+    const el = qs(sel);
+    if (el) el.value = val || '';
+  }
+
+  function setToggle(sel, val) {
+    const el = qs(sel);
+    if (!el) return;
+    const on = val === true || val === 'true';
+    el.classList.toggle('on', on);
+  }
+
+  function showSpinner(id) { const el = qs(`#${id}`); if(el) el.style.display = 'inline-block'; }
+  function hideSpinner(id) { const el = qs(`#${id}`); if(el) el.style.display = 'none'; }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ---- Keyboard shortcuts ------------------------------------------------
+  document.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'r') { refreshModel(); e.preventDefault(); }
+    }
+  });
+
+  // ---- Public API --------------------------------------------------------
+  return {
+    showTab, toggleCard, refreshModel,
+    inspectModel, filterEntities, filterEntityList,
+    selectEntity, zoomEntity,
+    autoTag, clearAllTags, filterCategories, selectCategory,
+    saveSetting, toggleSetting,
+    sendChat, toast
+  };
+
+})();
+
+// Request initial data on load
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof sketchup !== 'undefined') {
+    // Request data from Ruby
+    setTimeout(() => {
+      App.refreshModel();
+      sketchup.getCategoryLibrary && sketchup.getCategoryLibrary();
+      sketchup.getSettings && sketchup.getSettings();
+    }, 200);
+  }
+});
+</script>
+
+</body>
+</html>

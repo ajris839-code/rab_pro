@@ -1,0 +1,807 @@
+<!-- ================================================================
+     RAB Pro — Fase 4 HTML
+     AI Chat full panel + Dashboard + Templates + Cloud Sync
+================================================================ -->
+
+<style>
+/* ---- Fase 4 specific styles ------------------------------- */
+.chat-wrap {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 260px;
+  max-height: 400px;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 90%;
+}
+
+.msg.user { align-self: flex-end; align-items: flex-end; }
+.msg.ai   { align-self: flex-start; align-items: flex-start; }
+.msg.system { align-self: center; align-items: center; }
+
+.msg-bubble {
+  padding: 9px 13px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msg.user   .msg-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 3px; }
+.msg.ai     .msg-bubble { background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+.msg.system .msg-bubble { background: var(--bg3); color: var(--text3); font-size: 11px; font-style: italic; }
+
+.msg-meta {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 3px;
+  padding: 0 4px;
+}
+
+.chat-toolbar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.chat-textarea {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  min-height: 38px;
+  max-height: 100px;
+}
+
+.chat-textarea:focus { border-color: var(--accent); }
+
+.typing-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  background: var(--text3);
+  border-radius: 50%;
+  animation: typing 1s infinite;
+  margin: 0 1px;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing { 0%,80%,100%{transform:scale(0.8);opacity:.5} 40%{transform:scale(1.1);opacity:1} }
+
+/* ---- Dashboard ------------------------------------------- */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kpi-cell {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.kpi-val   { font-size: 16px; font-weight: 700; color: var(--accent); line-height: 1; }
+.kpi-label { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.progress-name { flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progress-bar-wrap { flex: 3; }
+.progress-bar { height: 8px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.progress-pct { flex: 0 0 35px; text-align: right; font-weight: 600; font-size: 11px; }
+
+.milestone-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.ms-icon { font-size: 14px; flex-shrink: 0; }
+.ms-name { flex: 2; }
+.ms-date { flex: 1; color: var(--text3); font-size: 10px; }
+.ms-status { font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+.ms-pending   { background: var(--bg3); color: var(--text3); }
+.ms-completed { background: #e8f5e9; color: #2e7d32; }
+.ms-delayed   { background: #fdecea; color: #c62828; }
+
+@media (prefers-color-scheme:dark) {
+  .ms-completed { background: #1b3a1e; color: #81c784; }
+  .ms-delayed   { background: #3c1010; color: #ef9a9a; }
+}
+
+/* ---- Templates ------------------------------------------- */
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.tmpl-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tmpl-card:hover { border-color: var(--accent); background: var(--accent-bg); }
+.tmpl-icon  { font-size: 26px; margin-bottom: 5px; }
+.tmpl-name  { font-size: 11px; font-weight: 600; color: var(--text); }
+.tmpl-area  { font-size: 10px; color: var(--text3); margin-top: 2px; }
+
+/* ---- Sync ------------------------------------------------ */
+.snapshot-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.snap-label { flex: 2; font-weight: 500; }
+.snap-date  { flex: 1; color: var(--text3); font-size: 10px; }
+.snap-val   { flex: 1; text-align: right; color: var(--accent); font-weight: 600; }
+
+.comment-item {
+  background: var(--bg2);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 11px;
+}
+
+.cmt-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.cmt-author { font-weight: 600; }
+.cmt-date   { color: var(--text3); font-size: 10px; }
+.cmt-text   { line-height: 1.5; }
+.cmt-resolved { opacity: 0.5; }
+</style>
+
+<!-- ============================================================
+     AI CHAT PANEL (full Fase 4 version)
+============================================================ -->
+<div id="ai-full-content">
+
+  <!-- Context indicator -->
+  <div class="card" style="margin-bottom:8px">
+    <div class="card-header" onclick="AIApp.toggleCard(this)">
+      <span>🧠 Konteks AI</span>
+      <span id="ai-context-label" class="badge">—</span>
+    </div>
+    <div class="card-body" style="display:none">
+      <pre id="ai-context-pre" style="font-size:10px;color:var(--text2);white-space:pre-wrap;line-height:1.5;max-height:120px;overflow-y:auto"></pre>
+      <div class="btn-row" style="margin-top:8px">
+        <button class="btn btn-sm" onclick="AIApp.refreshContext()">↺ Refresh Konteks</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat toolbar -->
+  <div class="chat-toolbar">
+    <button class="btn btn-sm" onclick="AIApp.sendQuick('Analisis model ini dan berikan overview singkat')">📊 Analisis Model</button>
+    <button class="btn btn-sm" onclick="AIApp.sendQuick('Berikan saran value engineering untuk proyek ini')">💡 Value Engineering</button>
+    <button class="btn btn-sm" onclick="AIApp.sendQuick('Apakah ada anomali atau ketidakwajaran dalam data RAB?')">🔍 Cek Anomali</button>
+    <button class="btn btn-sm" onclick="AIApp.clearChat()">🗑️ Reset</button>
+  </div>
+
+  <!-- Chat log -->
+  <div class="chat-log" id="ai-chat-log">
+    <div class="msg ai">
+      <div class="msg-bubble">Halo! Saya RAB Pro AI, siap membantu analisis model, estimasi biaya, dan konsultasi konstruksi. Model SketchUp aktif terhubung sebagai konteks saya. Apa yang bisa saya bantu?</div>
+    </div>
+  </div>
+
+  <!-- Input row -->
+  <div class="chat-input-row">
+    <textarea class="chat-textarea" id="ai-input" rows="1"
+      placeholder="Tanya tentang model, biaya, desain, material..."
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();AIApp.send()}"
+      oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"></textarea>
+    <button class="btn btn-primary btn-sm" onclick="AIApp.send()" id="ai-send-btn">Kirim</button>
+  </div>
+
+  <!-- API Key setup -->
+  <div class="card" style="margin-top:10px" id="api-key-card">
+    <div class="card-header" onclick="AIApp.toggleCard(this)">
+      <span>🔑 API Key (Claude)</span>
+      <span id="api-key-status" class="badge">Belum diset</span>
+    </div>
+    <div class="card-body" style="display:none">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input type="password" id="api-key-input" class="field-input" style="flex:1" placeholder="sk-ant-api...">
+        <button class="btn btn-sm" onclick="AIApp.saveKey()">Simpan</button>
+        <button class="btn btn-sm" onclick="AIApp.testKey()">Test</button>
+      </div>
+      <p style="font-size:10px;color:var(--text3)">Dapatkan API key di <a href="#" onclick="sketchup&&sketchup.openURL('https://console.anthropic.com')" style="color:var(--accent)">console.anthropic.com</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD PANEL
+============================================================ -->
+<div id="dashboard-content" style="display:none">
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip" id="dash-kpi">
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-budget">—</div><div class="kpi-label">Total RAB</div></div>
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-actual">—</div><div class="kpi-label">Aktual</div></div>
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-remaining">—</div><div class="kpi-label">Sisa</div></div>
+    <div class="kpi-cell"><div class="kpi-val" id="kpi-progress">—</div><div class="kpi-label">Progress</div></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="DashApp.refresh()">
+      <span id="dash-spinner" class="spinner" style="display:none"></span>
+      ↺ Refresh Dashboard
+    </button>
+    <button class="btn btn-sm" onclick="DashApp.initProgress()">Inisialisasi dari RAB</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="card">
+    <div class="card-header" onclick="DashApp.toggleCard(this)">
+      <span>📈 Progress per Pekerjaan</span>
+    </div>
+    <div class="card-body" id="progress-list">
+      <div class="empty"><div class="empty-icon">📈</div><div class="empty-title">Belum ada data</div><div class="empty-desc">Klik "Inisialisasi dari RAB" terlebih dahulu</div></div>
+    </div>
+  </div>
+
+  <!-- Milestones -->
+  <div class="card">
+    <div class="card-header" onclick="DashApp.toggleCard(this)">
+      <span>📅 Milestone Proyek</span>
+    </div>
+    <div class="card-body" id="milestone-list" style="padding:0">
+      <div style="padding:10px;color:var(--text3);font-size:11px;text-align:center">Belum ada milestone</div>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div id="alert-list"></div>
+</div>
+
+<!-- ============================================================
+     TEMPLATES PANEL
+============================================================ -->
+<div id="templates-content" style="display:none">
+
+  <p style="font-size:11px;color:var(--text2);margin-bottom:10px">
+    Pilih template proyek untuk setup otomatis layer, scene, dan milestone.
+  </p>
+
+  <div class="template-grid" id="template-grid">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Template preview -->
+  <div class="card" id="tmpl-preview-card" style="display:none;margin-top:10px">
+    <div class="card-header" style="cursor:default">
+      <span id="tmpl-preview-title">—</span>
+      <button class="btn btn-primary btn-sm" id="tmpl-apply-btn" onclick="TmplApp.apply()">✦ Terapkan Template</button>
+    </div>
+    <div class="card-body" id="tmpl-preview-body"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CLOUD SYNC PANEL
+============================================================ -->
+<div id="sync-content" style="display:none">
+
+  <!-- Export / Import -->
+  <div class="card">
+    <div class="card-header" onclick="SyncApp.toggleCard(this)">
+      <span>💾 Export & Import Proyek</span>
+    </div>
+    <div class="card-body">
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="SyncApp.exportJSON()">📤 Export JSON</button>
+        <button class="btn" onclick="SyncApp.importJSON()">📥 Import JSON</button>
+        <button class="btn" onclick="SyncApp.generateReport()">🌐 Laporan HTML</button>
+      </div>
+      <p style="font-size:10px;color:var(--text3);margin-top:6px">
+        JSON berisi semua data proyek: RAB, tag, progress, gambar register. Bisa dibagikan ke tim atau klien.
+      </p>
+    </div>
+  </div>
+
+  <!-- Snapshots -->
+  <div class="card">
+    <div class="card-header" onclick="SyncApp.toggleCard(this)">
+      <span>📸 Riwayat Versi (Snapshots)</span>
+      <button class="btn btn-sm" onclick="SyncApp.createSnapshot()">+ Simpan Versi</button>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div id="snapshot-list">
+        <div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Belum ada snapshot</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comments -->
+  <div class="card">
+    <div class="card-header" onclick="SyncApp.toggleCard(this)">
+      <span>💬 Komentar & Review</span>
+      <span id="cmt-count" class="badge">0</span>
+    </div>
+    <div class="card-body">
+      <div class="chat-input-row" style="margin-bottom:10px">
+        <input class="chat-textarea" id="cmt-input" type="text" style="border-radius:var(--radius-sm);padding:6px 10px"
+               placeholder="Tambah komentar...">
+        <button class="btn btn-sm" onclick="SyncApp.addComment()">Kirim</button>
+      </div>
+      <div id="comment-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================================================================
+// AIApp — AI Chat Fase 4
+// ================================================================
+const AIApp = (() => {
+
+  let _typing = false;
+  let _symbol = 'BND$';
+
+  function init() {
+    ruby('getChatHistory');
+    ruby('getAIContext');
+  }
+
+  function send() {
+    const input = qs('#ai-input');
+    const msg   = input.value.trim();
+    if (!msg || _typing) return;
+
+    _appendMsg('user', msg);
+    input.value = '';
+    input.style.height = 'auto';
+
+    _setTyping(true);
+    ruby('aiChat', { message: msg, include_model: true });
+  }
+
+  function sendQuick(msg) {
+    qs('#ai-input').value = msg;
+    send();
+  }
+
+  function onAIChatResponse(data) {
+    _removeTyping();
+    _setTyping(false);
+    if (data.success) {
+      _appendMsg('ai', data.content, data.tokens_used);
+    } else {
+      _appendMsg('system', data.content || 'Error');
+    }
+  }
+
+  function onChatHistory(data) {
+    const log = qs('#ai-chat-log');
+    const msgs = data.messages || [];
+    if (msgs.length > 1) {
+      log.innerHTML = '';
+      msgs.forEach(m => _appendMsg(m.role, m.content));
+    }
+  }
+
+  function onAIContext(data) {
+    const label = qs('#ai-context-label');
+    if (label) label.textContent = `${data.history_count || 0} pesan`;
+    const pre = qs('#ai-context-pre');
+    if (pre) pre.textContent = data.summary || '—';
+  }
+
+  function refreshContext() {
+    ruby('getAIContext');
+    App.toast('Konteks diperbarui');
+  }
+
+  function clearChat() {
+    ruby('clearChatHistory');
+    const log = qs('#ai-chat-log');
+    log.innerHTML = '';
+    _appendMsg('system', 'Riwayat percakapan dihapus. Mulai percakapan baru.');
+  }
+
+  function onChatHistoryCleared() { App.toast('Chat direset ✓'); }
+
+  function saveKey() {
+    const key = qs('#api-key-input')?.value?.trim();
+    if (!key) { App.toast('Masukkan API key terlebih dahulu'); return; }
+    ruby('saveApiKey', key);
+  }
+
+  function testKey() {
+    App.toast('Menguji koneksi API...');
+    ruby('testApiKey');
+  }
+
+  function onApiKeySaved() { App.toast('API key disimpan ✓'); }
+
+  function onApiKeyTest(data) {
+    App.toast(data.message);
+    const status = qs('#api-key-status');
+    if (status) {
+      status.textContent = data.ok ? '✓ Terhubung' : '✗ Gagal';
+      status.style.color = data.ok ? 'var(--accent)' : '#c62828';
+    }
+  }
+
+  function _appendMsg(role, text, tokens) {
+    const log = qs('#ai-chat-log');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = text;
+    div.appendChild(bubble);
+
+    if (tokens) {
+      const meta = document.createElement('div');
+      meta.className = 'msg-meta';
+      meta.textContent = `${tokens} tokens`;
+      div.appendChild(meta);
+    }
+
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function _setTyping(on) {
+    _typing = on;
+    const btn = qs('#ai-send-btn');
+    if (btn) btn.disabled = on;
+
+    if (on) {
+      const div = document.createElement('div');
+      div.className = 'msg ai';
+      div.id = 'typing-indicator';
+      div.innerHTML = `<div class="msg-bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`;
+      qs('#ai-chat-log').appendChild(div);
+      qs('#ai-chat-log').scrollTop = qs('#ai-chat-log').scrollHeight;
+    }
+  }
+
+  function _removeTyping() {
+    const el = qs('#typing-indicator');
+    if (el) el.remove();
+  }
+
+  function toggleCard(h) { const b = h.nextElementSibling; if(b) b.style.display = b.style.display==='none'?'':'none'; }
+
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+  function qs(s) { return document.querySelector(s); }
+
+  return { init, send, sendQuick, clearChat, saveKey, testKey, toggleCard, refreshContext,
+           onAIChatResponse, onChatHistory, onAIContext, onApiKeySaved, onApiKeyTest };
+})();
+
+// ================================================================
+// DashApp — Dashboard Fase 4
+// ================================================================
+const DashApp = (() => {
+
+  let _sym = 'BND$';
+
+  function init() { refresh(); }
+
+  function refresh() {
+    spinner('dash-spinner', true);
+    ruby('getDashboard');
+  }
+
+  function initProgress() {
+    ruby('initProgress');
+    App.toast('Inisialisasi progress dari RAB...');
+    setTimeout(() => refresh(), 800);
+  }
+
+  function onDashboard(data) {
+    spinner('dash-spinner', false);
+
+    // KPIs
+    setT('#kpi-budget',    fmtCur(data.budget_total));
+    setT('#kpi-actual',    fmtCur(data.actual_total));
+    setT('#kpi-remaining', fmtCur(data.remaining));
+    setT('#kpi-progress',  (data.overall_pct || 0) + '%');
+
+    // Progress list
+    const prog = data.progress || [];
+    const progEl = qs('#progress-list');
+    if (prog.length) {
+      progEl.innerHTML = prog.map(p => {
+        const pct   = p.pct_complete || 0;
+        const color = pct >= 100 ? '#2e7d32' : pct >= 50 ? '#0071e3' : '#ff9800';
+        return `<div class="progress-row">
+          <div class="progress-name" title="${esc(p.category_name)}">${esc(p.category_name)}</div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,100)}%;background:${color}"></div></div>
+          </div>
+          <div class="progress-pct" style="color:${color}">${pct}%</div>
+        </div>`;
+      }).join('');
+    }
+
+    // Milestones
+    const ms = data.milestones || [];
+    const msEl = qs('#milestone-list');
+    if (ms.length) {
+      msEl.innerHTML = ms.map(m => {
+        const icon = m.status === 'completed' ? '✅' : m.status === 'delayed' ? '⚠️' : '⏳';
+        const cls  = m.status === 'completed' ? 'ms-completed' : m.status === 'delayed' ? 'ms-delayed' : 'ms-pending';
+        return `<div class="milestone-item">
+          <span class="ms-icon">${icon}</span>
+          <span class="ms-name">${esc(m.name)}</span>
+          <span class="ms-date">${esc(m.planned_date || '—')}</span>
+          <span class="ms-status ${cls}">${esc(m.status)}</span>
+        </div>`;
+      }).join('');
+    }
+
+    // Alerts
+    const alerts = data.alerts || [];
+    const alertEl = qs('#alert-list');
+    if (alertEl) {
+      alertEl.innerHTML = alerts.map(a => {
+        const bg = a.level === 'danger' ? '#fdecea' : a.level === 'warning' ? '#fff8e1' : '#e3f2fd';
+        const tc = a.level === 'danger' ? '#c62828' : a.level === 'warning' ? '#e65100' : '#0d47a1';
+        return `<div style="background:${bg};color:${tc};padding:8px 12px;border-radius:6px;margin-bottom:6px;font-size:11px">
+          ${a.icon} <strong>${esc(a.title)}</strong> — ${esc(a.message)}
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function onProgressInitialized() { App.toast('Progress diinisialisasi ✓'); refresh(); }
+
+  function toggleCard(h) { const b = h.nextElementSibling; if(b) b.style.display = b.style.display==='none'?'':'none'; }
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+  function qs(s) { return document.querySelector(s); }
+  function setT(sel, t) { const el = qs(sel); if(el) el.textContent = t; }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function spinner(id, on) { const el = document.getElementById(id); if(el) el.style.display = on?'inline-block':'none'; }
+  function fmtCur(n) { return 'BND$ ' + parseFloat(n||0).toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+  return { init, refresh, initProgress, toggleCard, onDashboard, onProgressInitialized };
+})();
+
+// ================================================================
+// TmplApp — Templates Fase 4
+// ================================================================
+const TmplApp = (() => {
+
+  let _selectedId = null;
+
+  function init() { ruby('getTemplates'); }
+
+  function onTemplates(data) {
+    const grid = qs('#template-grid');
+    grid.innerHTML = (data.templates || []).map(t =>
+      `<div class="tmpl-card" onclick="TmplApp.preview('${t.id}')">
+        <div class="tmpl-icon">${t.icon}</div>
+        <div class="tmpl-name">${esc(t.name)}</div>
+        <div class="tmpl-area">${t.typical_area_m2} m²</div>
+      </div>`
+    ).join('');
+  }
+
+  function preview(id) {
+    _selectedId = id;
+    ruby('previewTemplate', id);
+  }
+
+  function onTemplatePreview(t) {
+    qs('#tmpl-preview-card').style.display = 'block';
+    qs('#tmpl-preview-title').textContent = t.name;
+
+    qs('#tmpl-preview-body').innerHTML = `
+      <p style="font-size:11px;margin-bottom:10px">${esc(t.description)}</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;font-size:11px">
+        <div><strong>${t.layer_count}</strong><br><span style="color:var(--text3)">Layer</span></div>
+        <div><strong>${t.category_count}</strong><br><span style="color:var(--text3)">Kategori RAB</span></div>
+        <div><strong>${t.scene_count}</strong><br><span style="color:var(--text3)">Scene</span></div>
+      </div>
+      <p style="font-size:10px;color:var(--text3);font-style:italic">${esc(t.notes || '')}</p>
+    `;
+  }
+
+  function apply() {
+    if (!_selectedId) return;
+    if (!confirm(`Terapkan template "${_selectedId}" ke model aktif?\n\nIni akan membuat layer, scene, dan milestone baru.`)) return;
+    ruby('applyTemplate', _selectedId);
+    App.toast('Menerapkan template...');
+  }
+
+  function onTemplateApplied(data) {
+    if (data.success) {
+      App.toast(`Template "${data.template}" berhasil diterapkan ✓`);
+    } else {
+      App.toast(`Error: ${data.error}`, 4000);
+    }
+  }
+
+  function qs(s) { return document.querySelector(s); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+
+  return { init, preview, apply, onTemplates, onTemplatePreview, onTemplateApplied };
+})();
+
+// ================================================================
+// SyncApp — Cloud Sync Fase 4
+// ================================================================
+const SyncApp = (() => {
+
+  function init() {
+    ruby('getSnapshots');
+    ruby('getComments');
+  }
+
+  function exportJSON()  { ruby('exportJSON'); }
+  function importJSON()  { ruby('importJSON'); }
+  function generateReport() { ruby('generateShareReport'); }
+
+  function createSnapshot() {
+    const label = prompt('Label untuk snapshot ini:', `Versi ${new Date().toLocaleDateString('id-ID')}`);
+    if (!label) return;
+    ruby('createSnapshot', { label });
+  }
+
+  function onSnapshotCreated(data) {
+    App.toast(`Snapshot "${data.label}" disimpan ✓`);
+    ruby('getSnapshots');
+  }
+
+  function onSnapshots(data) {
+    const el = qs('#snapshot-list');
+    const snaps = data.snapshots || [];
+    if (!snaps.length) {
+      el.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Belum ada snapshot</div>';
+      return;
+    }
+    el.innerHTML = snaps.reverse().map(s =>
+      `<div class="snapshot-item">
+        <span class="snap-label">${esc(s.label)}</span>
+        <span class="snap-date">${esc((s.created_at||'').slice(0,10))}</span>
+        <span class="snap-val">BND$ ${parseFloat(s.rab_total||0).toLocaleString('id-ID',{maximumFractionDigits:0})}</span>
+        <span class="snap-val">${s.progress_pct||0}%</span>
+      </div>`
+    ).join('');
+  }
+
+  function addComment() {
+    const input = qs('#cmt-input');
+    const text  = input?.value?.trim();
+    if (!text) return;
+    ruby('addComment', { author: 'Pengguna', text });
+    if (input) input.value = '';
+  }
+
+  function onComments(data) {
+    const cmts = data.comments || [];
+    qs('#cmt-count').textContent = cmts.length;
+
+    const el = qs('#comment-list');
+    if (!cmts.length) { el.innerHTML = ''; return; }
+
+    el.innerHTML = cmts.map(c =>
+      `<div class="comment-item ${c.resolved?'cmt-resolved':''}">
+        <div class="cmt-header">
+          <span class="cmt-author">${esc(c.author)}</span>
+          <span class="cmt-date">${esc((c.created_at||'').slice(0,10))}</span>
+        </div>
+        <div class="cmt-text">${esc(c.text)}</div>
+        ${!c.resolved ? `<button class="btn btn-sm" style="margin-top:6px;font-size:10px" onclick="SyncApp.resolve('${c.id}')">Tandai Selesai</button>` : '<em style="font-size:10px;color:var(--text3)">✓ Selesai</em>'}
+      </div>`
+    ).join('');
+  }
+
+  function resolve(id) { ruby('resolveComment', id); setTimeout(() => ruby('getComments'), 200); }
+
+  function onCommentAdded() { ruby('getComments'); }
+  function onShareReportGenerated(data) { App.toast(data.success ? 'Laporan HTML berhasil dibuat ✓' : `Error: ${data.error}`, 3000); }
+  function onImportComplete(data) { App.toast(data.success ? 'Import berhasil ✓' : `Error: ${data.error}`, 3000); }
+  function onExportComplete(data) { App.toast(data.success ? 'Export berhasil ✓' : `Error: ${data.error}`, 3000); }
+
+  function toggleCard(h) { const b = h.nextElementSibling; if(b) b.style.display = b.style.display==='none'?'':'none'; }
+  function qs(s) { return document.querySelector(s); }
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function ruby(a, p) { if(typeof sketchup!=='undefined') sketchup[a]&&sketchup[a](p||{}); }
+
+  return { init, exportJSON, importJSON, generateReport, createSnapshot, addComment, resolve, toggleCard,
+           onSnapshotCreated, onSnapshots, onComments, onCommentAdded, onShareReportGenerated, onImportComplete, onExportComplete };
+})();
+
+// Hook Fase 4 events into dispatcher
+;(function() {
+  const orig = window.RABPro?.onRubyEvent;
+  if (!window.RABPro) return;
+  const fase4 = {
+    onAIChatResponse:      AIApp.onAIChatResponse,
+    onChatHistory:         AIApp.onChatHistory,
+    onChatHistoryCleared:  AIApp.onChatHistoryCleared,
+    onAIContext:           AIApp.onAIContext,
+    onApiKeySaved:         AIApp.onApiKeySaved,
+    onApiKeyTest:          AIApp.onApiKeyTest,
+    onCommandParsed:       (d) => console.log('Command:', d),
+    onDashboard:           DashApp.onDashboard,
+    onProgressInitialized: DashApp.onProgressInitialized,
+    onProgressUpdated:     () => DashApp.refresh(),
+    onMilestoneUpdated:    () => DashApp.refresh(),
+    onMilestonesSaved:     () => App.toast('Milestone disimpan ✓'),
+    onTemplates:           TmplApp.onTemplates,
+    onTemplatePreview:     TmplApp.onTemplatePreview,
+    onTemplateApplied:     TmplApp.onTemplateApplied,
+    onSnapshotCreated:     SyncApp.onSnapshotCreated,
+    onSnapshots:           SyncApp.onSnapshots,
+    onComments:            SyncApp.onComments,
+    onCommentAdded:        SyncApp.onCommentAdded,
+    onShareReportGenerated: SyncApp.onShareReportGenerated,
+    onImportComplete:      SyncApp.onImportComplete,
+    onExportComplete:      (d) => { SyncApp.onExportComplete(d); },
+  };
+  window.RABPro.onRubyEvent = function(e, d) {
+    if (fase4[e]) fase4[e](d);
+    else if (orig) orig(e, d);
+  };
+})();
+
+// Init all Fase 4 apps
+setTimeout(() => {
+  AIApp.init();
+  TmplApp.init();
+  SyncApp.init();
+}, 600);
+</script>
